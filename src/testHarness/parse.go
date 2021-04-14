@@ -64,7 +64,7 @@ func nodeMatch(nList []g.Node, nNameMap map[string]*g.Node, nNeighborNameMap map
 	return newNodeList
 }
 
-func ParseFile(fileName string) g.Graph {
+func ParseFile(fileName string, colorInit bool) g.Graph {
 	f, err := os.Open(fileName)
 	parseCheck(err)
 
@@ -87,6 +87,8 @@ func ParseFile(fileName string) g.Graph {
 	var nodeNeighborNameMap map[string][]string
 	nodeNeighborNameMap = make(map[string][]string)
 
+	counter := 0 //TODO: INDEX 0 OR 1
+
 	for scanner.Scan() {
 		splitted1 := strings.Split(scanner.Text(), ":")
 
@@ -105,9 +107,13 @@ func ParseFile(fileName string) g.Graph {
 		}
 
 		newNode := g.Node {Name: nodeName}
+		if (colorInit) {
+			newNode.Color = counter
+		}
 		nodeNameMap[nodeName] = &newNode
 		nodeNeighborNameMap[nodeName] = neighborNames
 		nodeList = append(nodeList, newNode)
+		counter++
 	}
 
 	refinedNodeList := nodeMatch(nodeList, nodeNameMap, nodeNeighborNameMap)
