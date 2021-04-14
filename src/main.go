@@ -1,7 +1,9 @@
 package main
 
-import "fmt"
+import (
+	t "./testHarness"
+)
 
 func main() {
-	fmt.Println("hello world")
+	t.PrintStuff()
 }
