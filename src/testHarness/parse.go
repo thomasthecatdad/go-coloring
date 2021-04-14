@@ -38,7 +38,7 @@ func ParseFile(fileName string, colorInit bool) g.Graph {
 	scanner.Scan()
 	deg, err := strconv.Atoi(scanner.Text())
 
-	nodeList := make([]g.Node, 0)
+	var nodeList []*g.Node
 
 	var nodeNameMap map[string]*g.Node
 	nodeNameMap = make(map[string]*g.Node)
@@ -71,7 +71,7 @@ func ParseFile(fileName string, colorInit bool) g.Graph {
 		}
 		nodeNameMap[nodeName] = &newNode
 		nodeNeighborNameMap[nodeName] = neighborNames
-		nodeList = append(nodeList, newNode)
+		nodeList = append(nodeList, &newNode)
 		counter++
 	}
 

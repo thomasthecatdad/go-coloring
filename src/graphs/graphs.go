@@ -21,7 +21,7 @@ type Graph struct {
 	Name string
 	Description string
 	MaxDegree int
-	Nodes []Node
+	Nodes []*Node
 }
 
 type Node struct {
@@ -42,7 +42,7 @@ func IsSafe(gr *Graph) bool {
 }
 
 func DeepCopy(gr *Graph) Graph {
-	var nodeList []Node
+	var nodeList []*Node
 
 	var nodeNameMap map[string]*Node
 	nodeNameMap = make(map[string]*Node)
@@ -52,7 +52,7 @@ func DeepCopy(gr *Graph) Graph {
 
 	for _, node := range gr.Nodes {
 		newNode := Node{Name:node.Name, Color:node.Color}
-		nodeList = append(nodeList, newNode)
+		nodeList = append(nodeList, &newNode)
 		nodeNameMap[node.Name] = &newNode
 		nodeNeighborNameMap[node.Name] = GetNamesFromNodeList(node.Neighbors)
 	}
@@ -95,7 +95,7 @@ func contains(strs []string, query string) bool {
 	return false
 }
 
-func NodeMatch(nList []Node, nNameMap map[string]*Node, nNeighborNameMap map[string][]string) []Node {
+func NodeMatch(nList []*Node, nNameMap map[string]*Node, nNeighborNameMap map[string][]string) []*Node {
 	var nNeighborMap map[string][]*Node
 	nNeighborMap = make(map[string][]*Node)
 
@@ -121,10 +121,37 @@ func NodeMatch(nList []Node, nNameMap map[string]*Node, nNeighborNameMap map[str
 	}
 
 	//Retains original node order, rebuilds nodeList
-	var newNodeList []Node
+	//var newNodeList []*Node
 	for _, node := range nList {
 		node.Neighbors = nNeighborMap[node.Name]
-		newNodeList = append(newNodeList, node)
+		//newNodeList = append(newNodeList, &node)
 	}
-	return newNodeList
+	//return newNodeList
+	return nList
+}
+
+func RunColorInit(gr *Graph) *Graph {
+	for i, k := range gr.Nodes {
+		k.Color = i  //TODO: INDEX 0 OR 1
+	}
+	return gr
+}
+
+func intContains(nums []int, query int) bool {
+	for _, v := range nums {
+		if v == query {
+			return true
+		}
+	}
+	return false
+}
+
+func CountColors(gr *Graph) int {
+	var allColors []int
+	for _, node := range gr.Nodes {
+		if !intContains(allColors, node.Color) {
+			allColors = append(allColors, node.Color)
+		}
+	}
+	return len(allColors)
 }
