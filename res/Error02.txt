@@ -1,0 +1,7 @@
+Error02
+A simple graph for checking error messages with incorrect max degree
+2
+A:B,C,D
+B:A
+C:A,D
+D:A,C
