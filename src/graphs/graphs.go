@@ -27,8 +27,14 @@ type Node struct {
 }
 
 func IsSafe(gr *Graph) bool {
-	// TODO
-	return false
+	for _, node := range gr.Nodes {
+		for _, neighbor := range node.Neighbors {
+			if node.Color == neighbor.Color {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 func GetNamesFromNodeList(neighborNodes []*Node) []string {

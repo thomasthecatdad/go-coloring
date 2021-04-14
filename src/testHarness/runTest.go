@@ -12,3 +12,6 @@ type TestData struct {
 }
 
 //TODO: IMPLEMENT ACTUAL TEST HARNESS
+func RunTest(fileName string, algos []int, poolSize int, debug int) (g.Graph, []TestData) {
+	return g.Graph{}, nil
+}
