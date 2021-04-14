@@ -21,50 +21,9 @@ func parseCheck(e error) {
 	}
 }
 
-func contains(strs []string, query string) bool {
-	for _, v := range strs {
-		if v == query {
-			return true
-		}
-	}
-	return false
-}
 
-func nodeMatch(nList []g.Node, nNameMap map[string]*g.Node, nNeighborNameMap map[string][]string) []g.Node {
-	var nNeighborMap map[string][]*g.Node
-	nNeighborMap = make(map[string][]*g.Node)
 
-	//Construct proper nNeighborMap
-	for k, v := range nNeighborNameMap {
-		neighborPointers := make([]*g.Node, 0)
-		for _, neighborName := range v {
-			//Check for directed edges
-			n2Neighbors, ok := nNeighborNameMap[neighborName]
-			if !ok || !contains(n2Neighbors, k) {
-				log.Fatalf( "DIRECTED EDGE, neighbor node %s lacks reverse pointer to %s", neighborName, k)
-			}
-
-			//Retrieve neighbor pointer
-			neighbor, ok := nNameMap[neighborName]
-			if !ok {
-				log.Fatalf( "Parsing error, neighbor node pointer not found for %s with neighbor %s", k, neighborName)
-			}
-			neighborPointers = append(neighborPointers, neighbor)
-		}
-
-		nNeighborMap[k] = neighborPointers
-	}
-
-	//Retains original node order, rebuilds nodeList
-	var newNodeList []g.Node
-	for _, node := range nList {
-		node.Neighbors = nNeighborMap[node.Name]
-		newNodeList = append(newNodeList, node)
-	}
-	return newNodeList
-}
-
-func ParseFile(fileName string) g.Graph {
+func ParseFile(fileName string, colorInit bool) g.Graph {
 	f, err := os.Open(fileName)
 	parseCheck(err)
 
@@ -79,13 +38,15 @@ func ParseFile(fileName string) g.Graph {
 	scanner.Scan()
 	deg, err := strconv.Atoi(scanner.Text())
 
-	nodeList := make([]g.Node, 0)
+	var nodeList []*g.Node
 
 	var nodeNameMap map[string]*g.Node
 	nodeNameMap = make(map[string]*g.Node)
 
 	var nodeNeighborNameMap map[string][]string
 	nodeNeighborNameMap = make(map[string][]string)
+
+	counter := 0 //TODO: INDEX 0 OR 1
 
 	for scanner.Scan() {
 		splitted1 := strings.Split(scanner.Text(), ":")
@@ -94,6 +55,7 @@ func ParseFile(fileName string) g.Graph {
 		neighborNames := []string{splitted1[1]}
 		if strings.Contains(splitted1[1], ",") {
 			neighborNames = strings.Split(splitted1[1], ",")
+			//TODO: TRIM NEIGHBORNAMES FOR WHITESPACE
 		}
 
 		_, ok := nodeNameMap[nodeName]
@@ -105,12 +67,16 @@ func ParseFile(fileName string) g.Graph {
 		}
 
 		newNode := g.Node {Name: nodeName}
+		if (colorInit) {
+			newNode.Color = counter
+		}
 		nodeNameMap[nodeName] = &newNode
 		nodeNeighborNameMap[nodeName] = neighborNames
-		nodeList = append(nodeList, newNode)
+		nodeList = append(nodeList, &newNode)
+		counter++
 	}
 
-	refinedNodeList := nodeMatch(nodeList, nodeNameMap, nodeNeighborNameMap)
+	refinedNodeList := g.NodeMatch(nodeList, nodeNameMap, nodeNeighborNameMap)
 
 	return g.Graph{
 		Name: n,
