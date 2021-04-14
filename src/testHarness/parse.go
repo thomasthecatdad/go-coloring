@@ -21,48 +21,7 @@ func parseCheck(e error) {
 	}
 }
 
-func contains(strs []string, query string) bool {
-	for _, v := range strs {
-		if v == query {
-			return true
-		}
-	}
-	return false
-}
 
-func nodeMatch(nList []g.Node, nNameMap map[string]*g.Node, nNeighborNameMap map[string][]string) []g.Node {
-	var nNeighborMap map[string][]*g.Node
-	nNeighborMap = make(map[string][]*g.Node)
-
-	//Construct proper nNeighborMap
-	for k, v := range nNeighborNameMap {
-		neighborPointers := make([]*g.Node, 0)
-		for _, neighborName := range v {
-			//Check for directed edges
-			n2Neighbors, ok := nNeighborNameMap[neighborName]
-			if !ok || !contains(n2Neighbors, k) {
-				log.Fatalf( "DIRECTED EDGE, neighbor node %s lacks reverse pointer to %s", neighborName, k)
-			}
-
-			//Retrieve neighbor pointer
-			neighbor, ok := nNameMap[neighborName]
-			if !ok {
-				log.Fatalf( "Parsing error, neighbor node pointer not found for %s with neighbor %s", k, neighborName)
-			}
-			neighborPointers = append(neighborPointers, neighbor)
-		}
-
-		nNeighborMap[k] = neighborPointers
-	}
-
-	//Retains original node order, rebuilds nodeList
-	var newNodeList []g.Node
-	for _, node := range nList {
-		node.Neighbors = nNeighborMap[node.Name]
-		newNodeList = append(newNodeList, node)
-	}
-	return newNodeList
-}
 
 func ParseFile(fileName string, colorInit bool) g.Graph {
 	f, err := os.Open(fileName)
@@ -116,7 +75,7 @@ func ParseFile(fileName string, colorInit bool) g.Graph {
 		counter++
 	}
 
-	refinedNodeList := nodeMatch(nodeList, nodeNameMap, nodeNeighborNameMap)
+	refinedNodeList := g.NodeMatch(nodeList, nodeNameMap, nodeNeighborNameMap)
 
 	return g.Graph{
 		Name: n,
