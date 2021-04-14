@@ -5,5 +5,6 @@ import (
 )
 
 func main() {
-	t.PrintStuff()
+	g := t.ParseFile("res/SampleGraph01.txt")
+	t.PrintGraph(&g)
 }
