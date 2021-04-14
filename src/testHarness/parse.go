@@ -55,6 +55,7 @@ func ParseFile(fileName string, colorInit bool) g.Graph {
 		neighborNames := []string{splitted1[1]}
 		if strings.Contains(splitted1[1], ",") {
 			neighborNames = strings.Split(splitted1[1], ",")
+			//TODO: TRIM NEIGHBORNAMES FOR WHITESPACE
 		}
 
 		_, ok := nodeNameMap[nodeName]

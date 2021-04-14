@@ -121,12 +121,9 @@ func NodeMatch(nList []*Node, nNameMap map[string]*Node, nNeighborNameMap map[st
 	}
 
 	//Retains original node order, rebuilds nodeList
-	//var newNodeList []*Node
 	for _, node := range nList {
 		node.Neighbors = nNeighborMap[node.Name]
-		//newNodeList = append(newNodeList, &node)
 	}
-	//return newNodeList
 	return nList
 }
 
