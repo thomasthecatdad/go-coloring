@@ -1,8 +1,8 @@
 package testHarness
 
 import (
+	g "../graphs"
 	"bufio"
-	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -12,27 +12,41 @@ import (
 /*
 	Useful functions offered by this file:
 		- ParseFile: parse a fileName to get a Graph
-		- GetNamesFromNodeList: converts a list of Node pointers to a list of string Node names
-		- PrintGraph: prints a graph
  */
 
 // Most of parsing reference taken from // Reference from https://gobyexample.com/reading-files
 func parseCheck(e error) {
-	if (e != nil) {
+	if e != nil {
 		log.Fatal(e)
 	}
 }
 
-func nodeMatch(nList []Node, nNameMap map[string]*Node, nNeighborNameMap map[string][]string) []Node {
-	var nNeighborMap map[string][]*Node
-	nNeighborMap = make(map[string][]*Node)
+func contains(strs []string, query string) bool {
+	for _, v := range strs {
+		if v == query {
+			return true
+		}
+	}
+	return false
+}
 
-	//construct proper nNeighborMap
+func nodeMatch(nList []g.Node, nNameMap map[string]*g.Node, nNeighborNameMap map[string][]string) []g.Node {
+	var nNeighborMap map[string][]*g.Node
+	nNeighborMap = make(map[string][]*g.Node)
+
+	//Construct proper nNeighborMap
 	for k, v := range nNeighborNameMap {
-		neighborPointers := make([]*Node, 0)
+		neighborPointers := make([]*g.Node, 0)
 		for _, neighborName := range v {
+			//Check for directed edges
+			n2Neighbors, ok := nNeighborNameMap[neighborName]
+			if !ok || !contains(n2Neighbors, k) {
+				log.Fatalf( "DIRECTED EDGE, neighbor node %s lacks reverse pointer to %s", neighborName, k)
+			}
+
+			//Retrieve neighbor pointer
 			neighbor, ok := nNameMap[neighborName]
-			if (!ok) {
+			if !ok {
 				log.Fatalf( "Parsing error, neighbor node pointer not found for %s with neighbor %s", k, neighborName)
 			}
 			neighborPointers = append(neighborPointers, neighbor)
@@ -41,15 +55,16 @@ func nodeMatch(nList []Node, nNameMap map[string]*Node, nNeighborNameMap map[str
 		nNeighborMap[k] = neighborPointers
 	}
 
-	var newNodeList []Node
+	//Retains original node order, rebuilds nodeList
+	var newNodeList []g.Node
 	for _, node := range nList {
-		node.neighbors = nNeighborMap[node.name]
+		node.Neighbors = nNeighborMap[node.Name]
 		newNodeList = append(newNodeList, node)
 	}
 	return newNodeList
 }
 
-func ParseFile(fileName string) Graph {
+func ParseFile(fileName string) g.Graph {
 	f, err := os.Open(fileName)
 	parseCheck(err)
 
@@ -64,10 +79,10 @@ func ParseFile(fileName string) Graph {
 	scanner.Scan()
 	deg, err := strconv.Atoi(scanner.Text())
 
-	nodeList := make([]Node, 0)
+	nodeList := make([]g.Node, 0)
 
-	var nodeNameMap map[string]*Node
-	nodeNameMap = make(map[string]*Node)
+	var nodeNameMap map[string]*g.Node
+	nodeNameMap = make(map[string]*g.Node)
 
 	var nodeNeighborNameMap map[string][]string
 	nodeNeighborNameMap = make(map[string][]string)
@@ -77,19 +92,19 @@ func ParseFile(fileName string) Graph {
 
 		nodeName := splitted1[0]
 		neighborNames := []string{splitted1[1]}
-		if (strings.Contains(splitted1[1], ",")) {
+		if strings.Contains(splitted1[1], ",") {
 			neighborNames = strings.Split(splitted1[1], ",")
 		}
 
 		_, ok := nodeNameMap[nodeName]
-		if (ok) {
-			log.Fatal("Node %s duplicate definition", nodeName)
+		if ok {
+			log.Fatalf("Node %s duplicate definition", nodeName)
 		}
-		if (len(neighborNames) > deg) {
-			log.Fatal("Node %s has greater than %d degree", nodeName, deg)
+		if len(neighborNames) > deg {
+			log.Fatalf("Node %s has greater than %d degree", nodeName, deg)
 		}
 
-		newNode := Node {name: nodeName}
+		newNode := g.Node {Name: nodeName}
 		nodeNameMap[nodeName] = &newNode
 		nodeNeighborNameMap[nodeName] = neighborNames
 		nodeList = append(nodeList, newNode)
@@ -97,29 +112,10 @@ func ParseFile(fileName string) Graph {
 
 	refinedNodeList := nodeMatch(nodeList, nodeNameMap, nodeNeighborNameMap)
 
-	return Graph{
-		name: n,
-		description: d,
-		maxDegree: deg,
-		nodes: refinedNodeList,
+	return g.Graph{
+		Name: n,
+		Description: d,
+		MaxDegree: deg,
+		Nodes: refinedNodeList,
 	}
-}
-
-func GetNamesFromNodeList(neighborNodes []*Node) []string {
-	var neighborNames []string
-	for _, node := range neighborNodes {
-		neighborNames = append(neighborNames, node.name)
-	}
-	return neighborNames
-}
-
-func PrintGraph(g *Graph) {
-	fmt.Printf("Graph Name: \t\t%s\n", g.name)
-	fmt.Printf("Graph Description: \t%s\n", g.description)
-	fmt.Printf("Graph Max Degree: \t%d\n", g.maxDegree)
-	for _, v := range g.nodes {
-		neighborNames := GetNamesFromNodeList(v.neighbors)
-		fmt.Printf("Node: %s,\tColor: %d,\tNeighbors: %s\n", v.name, v.color, neighborNames)
-	}
-	fmt.Printf("---End of Graph [%s]", g.name)
 }
