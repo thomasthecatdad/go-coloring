@@ -1,7 +1,10 @@
 package main
 
-import "fmt"
+import (
+	t "./testHarness"
+)
 
 func main() {
-	fmt.Println("hello world")
+	g := t.ParseFile("res/SampleGraph01.txt")
+	t.PrintGraph(&g)
 }

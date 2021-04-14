@@ -1,0 +1,7 @@
+Sample01
+A simple graph for sanity checks
+3
+A:B,C,D
+B:A
+C:A,D
+D:A,C
