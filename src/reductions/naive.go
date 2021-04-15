@@ -28,8 +28,8 @@ func RunNaive(gr g.Graph, poolSize int, debug int) g.Graph {
 	return gr
 }
 
-func MinColor(n g.Node, poolSize int) int {
-	for i := 0; i < poolSize; i++ {
+func MinColor(n g.Node, maxDegree int) int {
+	for i := 0; i < maxDegree; i++ {
 		contained := false
 		for _, neighbor := range n.Neighbors {
 			if neighbor.Color == i {
