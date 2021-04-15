@@ -19,6 +19,7 @@ func main() {
 	//gr2.Nodes[0].Neighbors = append(gr2.Nodes[0].Neighbors, &gr2.Nodes[1])
 
 	g.PrintGraph(&gr)
+	g.GenerateHTMLForOne(&gr)
 	//g.PrintGraph(&gr2)
 
 	fmt.Printf("\n\n\n")
