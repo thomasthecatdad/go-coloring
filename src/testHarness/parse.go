@@ -15,6 +15,8 @@ import (
  */
 
 // Most of parsing reference taken from // Reference from https://gobyexample.com/reading-files
+
+// parseCheck is a helper method to log a fatal error message if an error exists
 func parseCheck(e error) {
 	if e != nil {
 		log.Fatal(e)
@@ -22,8 +24,10 @@ func parseCheck(e error) {
 }
 
 
-
+// ParseFile takes a fileName and whether or not colors should be initialized to their index in the node array.
+// Errors if file is incorrectly set up, given max degree is too small, or if directed edges are found
 func ParseFile(fileName string, colorInit bool) g.Graph {
+	//Initialize readers
 	f, err := os.Open(fileName)
 	parseCheck(err)
 
@@ -31,6 +35,7 @@ func ParseFile(fileName string, colorInit bool) g.Graph {
 	scanner := bufio.NewScanner(f)
 	scanner.Split(bufio.ScanLines)
 
+	//Parse metadata
 	scanner.Scan()
 	var n = scanner.Text()
 	scanner.Scan()
@@ -38,6 +43,7 @@ func ParseFile(fileName string, colorInit bool) g.Graph {
 	scanner.Scan()
 	deg, err := strconv.Atoi(scanner.Text())
 
+	//Initialize node tracking containers
 	var nodeList []*g.Node
 
 	var nodeNameMap map[string]*g.Node
@@ -48,6 +54,7 @@ func ParseFile(fileName string, colorInit bool) g.Graph {
 
 	counter := 0 //TODO: INDEX 0 OR 1
 
+	//Read nodes line by line
 	for scanner.Scan() {
 		splitted1 := strings.Split(strings.ReplaceAll(scanner.Text(), " ", ""), ":")
 
@@ -76,6 +83,7 @@ func ParseFile(fileName string, colorInit bool) g.Graph {
 		counter++
 	}
 
+	//Map string node names to their actual pointers
 	refinedNodeList := g.NodeMatch(nodeList, nodeNameMap, nodeNeighborNameMap)
 
 	return g.Graph{

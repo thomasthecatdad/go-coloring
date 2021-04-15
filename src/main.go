@@ -8,8 +8,8 @@ import (
 
 func main() {
 	gr := t.ParseFile("res/Sample01.txt", true)
-	//gr := t.ParseFile("res/Error01.txt")
-	//gr := t.ParseFile("res/Error02.txt")
+	//gr := t.ParseFile("res/Error01.txt") //Errors due to directed edges
+	//gr := t.ParseFile("res/Error02.txt") //Errors due to too small max degree
 
 	//gr2 := g.DeepCopy(&gr)
 	//gr2.Name = "A copy"
