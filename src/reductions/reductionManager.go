@@ -1,7 +1,7 @@
 package reductions
 
 import (
-	g "../graphs"
+	g "github.com/thomaseb191/go-coloring/graphs"
 	"log"
 )
 

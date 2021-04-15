@@ -1,9 +1,9 @@
 package main
 
 import (
-	g "./graphs"
-	t "./testHarness"
 	"fmt"
+	g "github.com/thomaseb191/go-coloring/graphs"
+	t "github.com/thomaseb191/go-coloring/testHarness"
 )
 
 func main() {
