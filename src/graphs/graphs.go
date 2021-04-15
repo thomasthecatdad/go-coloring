@@ -17,6 +17,11 @@ import (
 		- NodeMatch: convert a map of names into map of pointers
 */
 
+// Graph is a struct storing metadata and a list of nodes
+//		Name: the name of the graph
+//		Description: a description for the graph
+//		MaxDegree: the maximum degree of the nodes. MaxDegree is guaranteed to be >= the max degree of all nodes via parsing
+//		Nodes: an array of Node pointers that this graph owns
 type Graph struct {
 	Name string
 	Description string
@@ -24,12 +29,18 @@ type Graph struct {
 	Nodes []*Node
 }
 
+// Node is a struct representing an individual vertex in a Graph
+//		Name: the name of the node. Must be unique
+//		Color: the color of the Node. May be initialized, may be changed during color-reduction
+//		Neighbors: an array of Node pointers to a Node's neighbors
 type Node struct {
 	Name string
 	Color int
 	Neighbors []*Node
 }
 
+// IsSafe returns a bool for whether or not the Graph represents a valid coloring
+// Based on https://www.geeksforgeeks.org/m-coloring-problem-backtracking-5/
 func IsSafe(gr *Graph) bool {
 	for _, node := range gr.Nodes {
 		for _, neighbor := range node.Neighbors {
@@ -41,6 +52,7 @@ func IsSafe(gr *Graph) bool {
 	return true
 }
 
+// DeepCopy copies the Graph and all of its Nodes to hand over to another algorithm
 func DeepCopy(gr *Graph) Graph {
 	var nodeList []*Node
 
@@ -67,6 +79,8 @@ func DeepCopy(gr *Graph) Graph {
 	}
 }
 
+// GetNamesFromNodeList converts a list of Node pointers to their names
+// This function is mainly useful for printing
 func GetNamesFromNodeList(neighborNodes []*Node) []string {
 	var neighborNames []string
 	for _, node := range neighborNodes {
@@ -75,6 +89,7 @@ func GetNamesFromNodeList(neighborNodes []*Node) []string {
 	return neighborNames
 }
 
+// PrintGraph prints the metadata for a graph and then all of its nodes in an established format
 func PrintGraph(gr *Graph) {
 	fmt.Printf("Graph Name: \t\t%s\n", gr.Name)
 	fmt.Printf("Graph Description: \t%s\n", gr.Description)
@@ -86,6 +101,7 @@ func PrintGraph(gr *Graph) {
 	fmt.Printf("---End of Graph [%s].\n", gr.Name)
 }
 
+// contains is a helper method for whether or not a string query is within an array
 func contains(strs []string, query string) bool {
 	for _, v := range strs {
 		if v == query {
@@ -95,6 +111,11 @@ func contains(strs []string, query string) bool {
 	return false
 }
 
+// NodeMatch reduces an array of Node pointers and mapping of their string-named neighbors to actual pointers
+//		nList: an array of Node pointers that is edited directly to attach its neighbors
+//		nNameMap: a map of string Node names to their pointers
+//		nNeighborNameMap: a map of a Node's string name to its string-named neighbors
+// This is used during copying and parsing
 func NodeMatch(nList []*Node, nNameMap map[string]*Node, nNeighborNameMap map[string][]string) []*Node {
 	var nNeighborMap map[string][]*Node
 	nNeighborMap = make(map[string][]*Node)
@@ -127,6 +148,7 @@ func NodeMatch(nList []*Node, nNameMap map[string]*Node, nNeighborNameMap map[st
 	return nList
 }
 
+// RunColorInit sets all of the Node's colors in a Graph to their index in the Graph's Nodes
 func RunColorInit(gr *Graph) *Graph {
 	for i, k := range gr.Nodes {
 		k.Color = i  //TODO: INDEX 0 OR 1
@@ -134,6 +156,7 @@ func RunColorInit(gr *Graph) *Graph {
 	return gr
 }
 
+// intContains is a helper method for whether or not an int query is within an array
 func intContains(nums []int, query int) bool {
 	for _, v := range nums {
 		if v == query {
@@ -143,6 +166,7 @@ func intContains(nums []int, query int) bool {
 	return false
 }
 
+// CountColors counts the total number of unique colors within a Graph
 func CountColors(gr *Graph) int {
 	var allColors []int
 	for _, node := range gr.Nodes {
