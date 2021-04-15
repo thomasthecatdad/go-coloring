@@ -49,7 +49,7 @@ func ParseFile(fileName string, colorInit bool) g.Graph {
 	counter := 0 //TODO: INDEX 0 OR 1
 
 	for scanner.Scan() {
-		splitted1 := strings.Split(scanner.Text(), ":")
+		splitted1 := strings.Split(strings.ReplaceAll(scanner.Text(), " ", ""), ":")
 
 		nodeName := splitted1[0]
 		neighborNames := []string{splitted1[1]}
