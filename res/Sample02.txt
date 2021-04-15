@@ -1,0 +1,7 @@
+Sample02
+A simple graph for sanity checks naive coloring
+2
+A:B,C
+B:A,D
+C:A,D
+D:B,C
