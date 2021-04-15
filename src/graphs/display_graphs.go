@@ -3,7 +3,10 @@ package graphs
 import (
 	"fmt"
 	"github.com/go-echarts/go-echarts/v2/charts"
+	"github.com/go-echarts/go-echarts/v2/components"
 	"github.com/go-echarts/go-echarts/v2/opts"
+	"io"
+	"os"
 )
 
 // Generates all of the edges in JSON format for the charts API.
@@ -23,9 +26,9 @@ func generateNodes(gr *Graph) []opts.GraphNode {
 }
 
 // Generates a graph which can then be converted to HTML.
-func generateGraph(gr *Graph, graphNum int) *charts.Graph{
+func generateGraph(gr *Graph) *charts.Graph{
 	graph := charts.NewGraph()
-	title := fmt.Sprintf("Graph %[1]", graphNum)
+	title := fmt.Sprintf("Graph %s", gr.Name)
 	graph.SetGlobalOptions(
 		charts.WithTitleOpts(opts.Title{Title: title}),
 	)
@@ -40,4 +43,34 @@ func generateGraph(gr *Graph, graphNum int) *charts.Graph{
 	return graph
 }
 
-// TODO: Write method to convert an arbitrary number of graphs to HTML.
+// Method that converts an arbitrary number of graphs to HTML visualisations.
+func generateHTML(grs []*Graph, testNum int) {
+	page := components.NewPage()
+	for _, x := range grs {
+		page.AddCharts(
+			generateGraph(x),
+		)
+	}
+	path := fmt.Sprintf("res/html/test%dResults.html", testNum)
+	f, err := os.Create(path)
+	if err != nil {
+		panic(err)
+
+	}
+	page.Render(io.MultiWriter(f))
+}
+
+// Method that converts one graph to HTML visualized.
+func generateHTMLForOne(gr *Graph) {
+	page := components.NewPage()
+	page.AddCharts(
+		generateGraph(gr),
+	)
+	path := fmt.Sprintf("res/html/%s", gr.Name)
+	f, err := os.Create(path)
+	if err != nil {
+		panic(err)
+	}
+	page.Render(io.MultiWriter(f))
+
+}
