@@ -1,8 +1,8 @@
 package reductions
 
 import (
-	g "../graphs"
 	"fmt"
+	g "github.com/thomaseb191/go-coloring/graphs"
 	"time"
 )
 

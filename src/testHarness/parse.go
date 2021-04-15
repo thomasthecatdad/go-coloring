@@ -1,8 +1,8 @@
 package testHarness
 
 import (
-	g "../graphs"
 	"bufio"
+	g "github.com/thomaseb191/go-coloring/graphs"
 	"log"
 	"os"
 	"strconv"

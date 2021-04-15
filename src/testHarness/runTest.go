@@ -1,10 +1,10 @@
 package testHarness
 
 import (
-	r "../reductions"
-	//d "../display" //TODO: IMPORT
-	g "../graphs"
+	r "github.com/thomaseb191/go-coloring/reductions"
 	"fmt"
+	//d "../display" //TODO: IMPORT
+	g "github.com/thomaseb191/go-coloring/graphs"
 	"time"
 )
 
