@@ -23,6 +23,7 @@ func main() {
 
 	fmt.Printf("\n\n\n")
 
-	tResults := t.RunTest("res/Sample01.txt", []int{}, -1, 3)
+	tResults := t.RunTest("res/Sample02.txt", []int{}, -1, 3)
 	fmt.Printf("Duration of test %s: %d with %d colors\n", tResults[0].Name, tResults[0].DurationMillis.Milliseconds(), tResults[0].NumColors)
+	g.PrintGraph(&tResults[0].Output)
 }
