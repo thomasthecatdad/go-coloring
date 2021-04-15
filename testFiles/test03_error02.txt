@@ -1,0 +1,2 @@
+% Error test for too small max degree
+../res/Error02.txt []

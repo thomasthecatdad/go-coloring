@@ -1,0 +1,2 @@
+% Simple sanity check
+../res/Sample02.txt [0]

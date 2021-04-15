@@ -12,7 +12,21 @@ import (
 /*
 	Useful functions offered by this file:
 		- ParseFile: parse a fileName to get a Graph
+		- ParseTestFile: parses a fileName to get a list of TestDirectives
+		- ConvertStringToIntArray converts an input string and parses it into an int array
  */
+
+// TestDirective is a struct contains a string fileName for a graph and a list of algos and any other settings
+//		GraphFile: the fileName to read in to build the graph
+//		Algos: an integer array list of IDs for algorithms to run
+//		PoolSize: the number of goroutine workers to allow (default -1)
+//		Debug: the debug level for printing and displaying test results
+type TestDirective struct {
+	GraphFile string
+	Algos []int
+	PoolSize int
+	Debug int
+}
 
 // Most of parsing reference taken from // Reference from https://gobyexample.com/reading-files
 
@@ -91,4 +105,82 @@ func ParseFile(fileName string, colorInit bool) g.Graph {
 		MaxDegree: deg,
 		Nodes: refinedNodeList,
 	}
+}
+
+// ParseTestFile takes a fileName and parses it to create an array of TestDirectives
+func ParseTestFile(fileName string) []TestDirective {
+	//Initialize readers
+	f, err := os.Open(fileName)
+	parseCheck(err)
+
+	defer f.Close()
+	scanner := bufio.NewScanner(f)
+	scanner.Split(bufio.ScanLines)
+
+	var directiveList []TestDirective
+
+	for scanner.Scan() {
+		if strings.Contains(scanner.Text(), "%") {
+			continue
+		}
+		splitted1 := strings.Split(scanner.Text(), " ")
+		directiveList = append(directiveList, ParseArgsList(splitted1))
+	}
+	return directiveList
+}
+
+// ParseArgsList parses an array of Strings to create a TestDirective
+func ParseArgsList(argList []string) TestDirective {
+	poolSize := -1
+	debugLevel := 3
+	var err error = nil
+
+	if len(argList) > 2 {
+		poolSize, err = strconv.Atoi(argList[2])
+		if err != nil {
+			log.Fatal("Error parsing poolSize input")
+		}
+	}
+	if len(argList) > 3 {
+		debugLevel, err = strconv.Atoi(argList[3])
+		if err != nil {
+			log.Fatal("Error parsing debug input")
+		}
+	}
+	return TestDirective{
+		GraphFile: argList[0],
+		Algos: ConvertStringToIntArray(argList[1]),
+		PoolSize: poolSize,
+		Debug: debugLevel,
+	}
+}
+
+// ConvertStringToIntArray converts an input string and parses it into an int array
+// Accepts [1,2,3]; [1,2,3,; 1,2,3]; and []
+// Whitespace will throw an error with two many arguments
+func ConvertStringToIntArray(str string) []int {
+	removeBrackets1 := strings.ReplaceAll(str, "[", "")
+	removeBrackets2 := strings.ReplaceAll(removeBrackets1, "]", "")
+	if len(removeBrackets2) == 0 {
+		return []int{}
+	}
+
+	splitted := strings.Split(removeBrackets2, ",")
+	if len(splitted) == 0 {
+		conv, err := strconv.Atoi(removeBrackets2)
+		if err != nil {
+			log.Fatal("Error parsing algo ID inputs")
+		}
+		return []int{conv}
+	}
+
+	var res []int
+	for _, val := range splitted {
+		conv, err := strconv.Atoi(val)
+		if err != nil {
+			log.Fatal("Error parsing algo ID inputs")
+		}
+		res = append(res, conv)
+	}
+	return res
 }

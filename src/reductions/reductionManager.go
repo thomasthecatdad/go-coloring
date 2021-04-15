@@ -25,7 +25,7 @@ func RunReduction(gr g.Graph, id int, poolSize int, debug int) (g.Graph, string)
 
 
 	default:
-		log.Fatal("No such algorithm found")
+		log.Fatalf("No such algorithm found for %d.\n", id)
 	}
 	return outGraph, algoName
 }
