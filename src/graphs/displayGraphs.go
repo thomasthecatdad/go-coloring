@@ -9,8 +9,8 @@ import (
 	"os"
 )
 
-// Generates all of the edges in JSON format for the charts API.
-// Takes in one of our graphs and converts into one of theirs.
+// generateEdges is a helper method that
+	//	Generates all of the edges in JSON format for the charts API.
 func generateEdges(gr *Graph) []opts.GraphLink {
 	fmt.Printf("Generating Edges... \n")
 	edges := make([]opts.GraphLink, 0)
@@ -27,8 +27,8 @@ func generateEdges(gr *Graph) []opts.GraphLink {
 	return edges
 }
 
-// Generates all of the nodes in JSON fomrat for the charts API.
-// Takes in one of our graphs and converts into one of theirs.
+// generateNodes is a helper method that
+	//	Generates all of the nodes in JSON format for the charts API.
 func generateNodes(gr *Graph) []opts.GraphNode {
 	fmt.Printf("Generating Nodes... \n")
 	nodes := make([]opts.GraphNode, 0)
@@ -43,7 +43,7 @@ func generateNodes(gr *Graph) []opts.GraphNode {
 	return nodes
 }
 
-// generate graph is a Generates a graph which can then be converted to HTML.
+// generateGraph is a Generates a graph which can then be converted to HTML.
 func generateGraph(gr *Graph) *charts.Graph{
 	categories := make([]*opts.GraphCategory, 0)
 	numColors := CountColors(gr)
@@ -90,7 +90,8 @@ func generateGraph(gr *Graph) *charts.Graph{
 	return graph
 }
 
-// Method that converts an arbitrary number of graphs to HTML visualisations.
+// GenerateHTMLForMany is a
+	//Method that converts an arbitrary number of graphs to HTML visualisations.
 func GenerateHTMLForMany(grs []*Graph, testNum int) {
 	page := components.NewPage()
 	for _, x := range grs {
@@ -107,17 +108,23 @@ func GenerateHTMLForMany(grs []*Graph, testNum int) {
 	page.Render(io.MultiWriter(f))
 }
 
-// Method that converts one graph to HTML visualized.
+// GenerateHTMLForOne is a
+	// Method that converts one graph to HTML visualized.
 func GenerateHTMLForOne(gr *Graph) {
 	fmt.Printf("Generating HTML... for one graph\n")
 	page := components.NewPage()
 	page.AddCharts(
 		generateGraph(gr),
 	)
-	path := fmt.Sprintf("html/%s.html", gr.Name)
-	f, err := os.Create(path)
-	if err != nil {
-		panic(err)
+	path := fmt.Sprintf("../html/%s.html", gr.Name)
+	errRemove := os.Remove(path)
+	if errRemove != nil {
+		panic(errRemove)
+	}
+
+	f, errCreate := os.Create(path)
+	if errCreate != nil {
+		panic(errCreate)
 	}
 	page.Render(io.MultiWriter(f))
 }

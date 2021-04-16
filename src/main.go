@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	gr := t.ParseFile("res/Sample01.txt", true)
+	gr := t.ParseFile("../res/Sample01.txt", true)
 	//gr := t.ParseFile("res/Error01.txt")
 	//gr := t.ParseFile("res/Error02.txt")
 
@@ -24,6 +24,6 @@ func main() {
 
 	fmt.Printf("\n\n\n")
 
-	tResults := t.RunTest("res/Sample01.txt", []int{}, -1, 3)
+	tResults := t.RunTest("../res/Sample01.txt", []int{}, -1, 3)
 	fmt.Printf("Duration of test %s: %d with %d colors\n", tResults[0].Name, tResults[0].DurationMillis.Milliseconds(), tResults[0].NumColors)
 }
