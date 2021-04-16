@@ -25,7 +25,7 @@ func main() {
 		tResults := t.RunTest("../res/Sample02.txt", []int{}, -1, 3)
 		fmt.Printf("Duration of test %s: %d with %d colors\n", tResults[0].Name, tResults[0].DurationMillis.Milliseconds(), tResults[0].NumColors)
 		g.PrintGraph(&tResults[0].Output)
-		g.GenerateHTMLForOne(&tResults[0].Output)
+		g.GenerateHTMLForOne(&tResults[0].Output, tResults[0].Name)
 	} else if len(inputArgs) == 2 {
 		// Read in file with list of tests to run
 		testFileName := os.Args[1]
@@ -52,7 +52,7 @@ func runTestAndPrintResult(td t.TestDirective) {
 		//TODO: REFINE TEST OUTPUT, MAYBE EXPORT RESULTS TO FILE
 		fmt.Printf("Test Name: %s\n", k.Name)
 		g.PrintGraph(&k.Output)
-		g.GenerateHTMLForOne(&k.Output)
+		g.GenerateHTMLForOne(&k.Output, k.Name)
 	}
 	fmt.Printf("\n-------------------------\n")
 }

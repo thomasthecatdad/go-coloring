@@ -7,6 +7,7 @@ import (
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"io"
 	"os"
+	"time"
 )
 
 // generateEdges is a helper method that
@@ -111,13 +112,15 @@ func GenerateHTMLForMany(grs []*Graph) {
 
 // GenerateHTMLForOne is a
 	// Method that converts one graph to HTML visualized.
-func GenerateHTMLForOne(gr *Graph) {
-	fmt.Printf("Generating HTML... for one graph\n")
+func GenerateHTMLForOne(gr *Graph, testName string) {
+	fmt.Printf("Generating HTML... for graph %s and test %s\n", gr.Name, testName)
 	page := components.NewPage()
 	page.AddCharts(
 		generateGraph(gr),
 	)
-	path := fmt.Sprintf("../html/%s.html", gr.Name)
+	now := time.Now()
+
+	path := fmt.Sprintf("../html/%s_%s_%d-%d-%d.html", gr.Name, testName, now.Second(), now.Minute(), now.Hour())
 	//errRemove := os.Remove(path)
 	//if errRemove != nil {
 	//	panic(errRemove)
@@ -128,5 +131,5 @@ func GenerateHTMLForOne(gr *Graph) {
 		panic(errCreate)
 	}
 	page.Render(io.MultiWriter(f))
-	fmt.Printf("New HTML file created for graph %s\n", gr.Name)
+	fmt.Printf("New HTML file created for graph %s and test %s\n", gr.Name, testName)
 }
