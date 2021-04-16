@@ -92,14 +92,14 @@ func generateGraph(gr *Graph) *charts.Graph{
 
 // GenerateHTMLForMany is a
 	//Method that converts an arbitrary number of graphs to HTML visualisations.
-func GenerateHTMLForMany(grs []*Graph, testNum int) {
+func GenerateHTMLForMany(grs []*Graph) {
 	page := components.NewPage()
 	for _, x := range grs {
 		page.AddCharts(
 			generateGraph(x),
 		)
 	}
-	path := fmt.Sprintf("html/test%dResults.html", testNum)
+	path := fmt.Sprintf("../html/testResults.html")
 	f, err := os.Create(path)
 	if err != nil {
 		panic(err)
@@ -117,14 +117,15 @@ func GenerateHTMLForOne(gr *Graph) {
 		generateGraph(gr),
 	)
 	path := fmt.Sprintf("../html/%s.html", gr.Name)
-	errRemove := os.Remove(path)
-	if errRemove != nil {
-		panic(errRemove)
-	}
+	//errRemove := os.Remove(path)
+	//if errRemove != nil {
+	//	panic(errRemove)
+	//}
 
 	f, errCreate := os.Create(path)
 	if errCreate != nil {
 		panic(errCreate)
 	}
 	page.Render(io.MultiWriter(f))
+	fmt.Printf("New HTML file created for graph %s\n", gr.Name)
 }

@@ -1,0 +1,2 @@
+% Error test for directed edges
+../res/Error01.txt []
