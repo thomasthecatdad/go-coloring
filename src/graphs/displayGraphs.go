@@ -43,7 +43,8 @@ func generateNodes(gr *Graph) []opts.GraphNode {
 	return nodes
 }
 
-// generateGraph is a Generates a graph which can then be converted to HTML.
+// generateGraph is a helper method that
+	// Generates a graph which can then be converted to HTML.
 func generateGraph(gr *Graph) *charts.Graph{
 	categories := make([]*opts.GraphCategory, 0)
 	numColors := CountColors(gr)
@@ -91,7 +92,7 @@ func generateGraph(gr *Graph) *charts.Graph{
 }
 
 // GenerateHTMLForMany is a
-	//Method that converts an arbitrary number of graphs to HTML visualisations.
+	// Method that converts an arbitrary number of graphs to HTML visualisations.
 func GenerateHTMLForMany(grs []*Graph) {
 	page := components.NewPage()
 	for _, x := range grs {
