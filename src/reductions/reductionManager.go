@@ -5,8 +5,8 @@ import (
 	"log"
 )
 
-// A list of all valid algorithm IDs for when t.RunTest is given an empty array
-var AllAlgIds = []int{0} //TODO: ADD ADDITIONAL IDS
+// AllAlgIds - A list of all valid algorithm IDs for when t.RunTest is given an empty array.
+var AllAlgIds = []int{0, 1} //TODO: ADD ADDITIONAL IDS
 
 // RunReduction calls the respective color-reducing algorithm for a graph, algorithm id, number of worker pools, and debug setting
 // 		gr: a graph that the algorithm will own
@@ -21,6 +21,9 @@ func RunReduction(gr g.Graph, id int, poolSize int, debug int) (g.Graph, string)
 	case 0:
 		outGraph = RunNaive(gr, poolSize, debug)
 		algoName = "Naive"
+	case 1:
+		outGraph = kwReduction(gr, poolSize, debug)
+		algoName = "Kuhn-Wattenhofer"
 	//TODO: ADD ADDITIONAL ALGORITHMS
 
 

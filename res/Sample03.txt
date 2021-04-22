@@ -1,0 +1,18 @@
+Sample03
+A more complex graph for sanity checks kw coloring
+3
+A:B
+B:A,C
+C:B,E
+D:E,G
+E:C,D,H
+F:H,I
+G:D
+H:E,F,J
+I:F,L
+J:H,K
+K:J,N
+L:I
+M:N
+N:K,M,O
+O:N

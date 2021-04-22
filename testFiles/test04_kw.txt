@@ -1,0 +1,2 @@
+% Simple sanity check for kw
+../res/Sample03.txt [0,1]

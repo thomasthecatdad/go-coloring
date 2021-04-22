@@ -50,7 +50,7 @@ func RunTest(fileName string, algos []int, poolSize int, debug int) []TestData {
 		numColors := g.CountColors(&outGraph)
 
 		if debug % 2 == 1 {
-			fmt.Printf("Output IsSafe() for %s_%s in %d: %t\n", initGraph.Name, algoName, elapsed.Milliseconds(), g.IsSafe(&initGraph))
+			fmt.Printf("Output IsSafe() for %s_%s in %d: %t\n", initGraph.Name, algoName, elapsed.Nanoseconds(), g.IsSafe(&initGraph))
 			fmt.Printf("\t\tNum Colors: %d\n", numColors)
 		}
 
