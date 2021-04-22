@@ -13,7 +13,7 @@ max_degree = int(sys.argv[2])
 name = f"Graph_N{num_nodes}_D{max_degree}"
 description = f"A graph with {num_nodes} nodes and a max degree of {max_degree}"
 if len(sys.argv) == 4:
-	description = argv[3]
+	description = sys.argv[3]
 
 file = open(name+".txt", "w+")
 file.write(name + "\n")
