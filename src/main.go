@@ -44,7 +44,6 @@ func main() {
 	} else {
 		log.Fatal("Incorrect arguments specified")
 	}
-
 }
 
 // runTestAndPrintResults is a helper method to run a specific test set
