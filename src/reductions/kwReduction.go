@@ -4,11 +4,13 @@ import (
 	"fmt"
 	g "github.com/thomaseb191/go-coloring/graphs"
 )
-
+// runNaiveGoRoutine is a helper function that runs the naive algorithm as a goroutine and
+// sends the result back through a channel.
 func runNaiveGoRoutine(gr g.Graph, poolSize int, debug int, c chan g.Graph) {
 	c <- RunNaive(gr, poolSize, debug)
 }
 
+// convertBinsToGraph is a helper method that converts color "bins" into graphs.
 func convertBinsToGraph(bins [][]*g.Node, original g.Graph) g.Graph {
 	nodes := make([]*g.Node, 0)
 	for color := 0; color < len(bins); color++ {
@@ -30,6 +32,8 @@ func convertBinsToGraph(bins [][]*g.Node, original g.Graph) g.Graph {
 	}
 }
 
+// combineColors is a helper method that runs the naive algorithms on smaller bins and combines them
+// into a new set of smaller bins.
 func combineColors(bins [][]*g.Node, gr g.Graph, c chan [][]*g.Node) {
 	binsGraph := convertBinsToGraph(bins, gr)
 	newGr := RunNaive(binsGraph, -1, 3)
@@ -47,12 +51,14 @@ func combineColors(bins [][]*g.Node, gr g.Graph, c chan [][]*g.Node) {
 	c <- newBins
 }
 
+// kwReduction is the main method that runs the KW algorithm.
 func kwReduction(gr g.Graph, poolSize int, debug int) g.Graph {
 	fmt.Printf("Starting KW Reduction \n")
 	degree := gr.MaxDegree
 	startIndexes := make([]int, 0)
 	size := len(gr.Nodes)
 	c := make(chan g.Graph)
+	// If we can't split the graph into bins, 
 	if size < 2 * (degree + 1) {
 		gr.Description = "Color Reduced with KW"
 		go runNaiveGoRoutine(gr, poolSize, debug, c)
