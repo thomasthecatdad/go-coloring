@@ -53,10 +53,11 @@ func RunTest(fileName string, algos []int, poolSize int, debug int) []TestData {
 			fmt.Printf("Output IsSafe() for %s_%s in %d: %t\n", initGraph.Name, algoName, elapsed.Nanoseconds(), g.IsSafe(&initGraph))
 			fmt.Printf("\t\tNum Colors: %d\n", numColors)
 		}
+		testName := initGraph.Name + "_" + algoName
 
 
 		newTest := TestData{
-			Name: initGraph.Name + "_" + algoName,
+			Name: testName,
 			DurationMillis: elapsed,
 			Output: outGraph,
 			NumColors: numColors,
@@ -79,6 +80,7 @@ func RunTest(fileName string, algos []int, poolSize int, debug int) []TestData {
 				MaxDegree: outGraph.MaxDegree,
 			}
 			g.GenerateHTMLForMany(graphs)
+			//g.GenerateHTMLForOne(&outGraph, testName)
 		}
 	}
 	return testDatas
