@@ -1,7 +1,0 @@
-Error01
-A simple graph for checking error messages with directed edges
-3
-A:B,C,D
-B:A
-C:A
-D:A,C

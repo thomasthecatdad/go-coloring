@@ -65,6 +65,7 @@ func generateGraph(gr *Graph) *charts.Graph{
 		charts.WithTitleOpts(opts.Title{Title: title}),
 		charts.WithLegendOpts(
 			opts.Legend{
+				Left : "60%",
 				Show: true,
 				Data: categories,
 			}),
@@ -75,8 +76,9 @@ func generateGraph(gr *Graph) *charts.Graph{
 		SetSeriesOptions(
 			charts.WithGraphChartOpts(
 				opts.GraphChart {
-					Force: &opts.GraphForce{Repulsion: 8000},
+					Force: &opts.GraphForce{Repulsion: 100},
 					Layout: "force",
+					Roam:	true,
 					Categories: categories,
 				}),
 			charts.WithLabelOpts(
@@ -86,7 +88,7 @@ func generateGraph(gr *Graph) *charts.Graph{
 				}),
 			charts.WithLineStyleOpts(
 				opts.LineStyle {
-					Curveness: 0.3,
+					Curveness: 0.1,
 				}),
 		)
 	return graph
@@ -95,19 +97,22 @@ func generateGraph(gr *Graph) *charts.Graph{
 // GenerateHTMLForMany is a
 	// Method that converts an arbitrary number of graphs to HTML visualisations.
 func GenerateHTMLForMany(grs []*Graph) {
+	fmt.Printf("Generating html...\n")
 	page := components.NewPage()
 	for _, x := range grs {
 		page.AddCharts(
 			generateGraph(x),
 		)
 	}
-	path := fmt.Sprintf("../html/testResults.html")
+	now := time.Now()
+	path := fmt.Sprintf("../html/%s_%s_%d-%d-%dtestResults.html", grs[0].Name, grs[1].Name, now.Second(), now.Minute(), now.Hour())
 	f, err := os.Create(path)
 	if err != nil {
 		panic(err)
 
 	}
 	page.Render(io.MultiWriter(f))
+	fmt.Printf("Done generating html.\n")
 }
 
 // GenerateHTMLForOne is a
@@ -121,10 +126,6 @@ func GenerateHTMLForOne(gr *Graph, testName string) {
 	now := time.Now()
 
 	path := fmt.Sprintf("../html/%s_%s_%d-%d-%d.html", gr.Name, testName, now.Second(), now.Minute(), now.Hour())
-	//errRemove := os.Remove(path)
-	//if errRemove != nil {
-	//	panic(errRemove)
-	//}
 
 	f, errCreate := os.Create(path)
 	if errCreate != nil {

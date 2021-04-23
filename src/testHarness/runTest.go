@@ -54,6 +54,7 @@ func RunTest(fileName string, algos []int, poolSize int, debug int) []TestData {
 			fmt.Printf("\t\tNum Colors: %d\n", numColors)
 		}
 
+
 		newTest := TestData{
 			Name: initGraph.Name + "_" + algoName,
 			DurationMillis: elapsed,
@@ -64,7 +65,20 @@ func RunTest(fileName string, algos []int, poolSize int, debug int) []TestData {
 
 		//Render if desired
 		if debug >= 2 {
-			//TODO: RENDER VISUALIZATION
+			graphs := make([]*g.Graph, 2)
+			graphs[0] = &g.Graph{
+				Name: initGraph.Name + "_Original",
+				Description: initGraph.Description + " Original",
+				Nodes: initGraph.Nodes,
+				MaxDegree: initGraph.MaxDegree,
+			}
+			graphs[1] = &g.Graph{
+				Name: outGraph.Name + "_After_Reduction",
+				Description: outGraph.Description + " After Reduction",
+				Nodes: outGraph.Nodes,
+				MaxDegree: outGraph.MaxDegree,
+			}
+			g.GenerateHTMLForMany(graphs)
 		}
 	}
 	return testDatas

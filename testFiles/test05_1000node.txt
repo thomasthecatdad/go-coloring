@@ -1,0 +1,2 @@
+% 1000 node test for scalability
+../res/Graph_N1000_D10.txt [0,1]
