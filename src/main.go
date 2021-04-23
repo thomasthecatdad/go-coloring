@@ -34,20 +34,20 @@ func main() {
 		testDirectives := t.ParseTestFile(testFileName)
 
 		for _, td := range testDirectives {
-			runTestAndPrintResult(td)
+			runTestAndPrintResult(td, testFileName)
 		}
 	} else if len(inputArgs) >= 3 && len(inputArgs) <= 5 {
 		// Run a singular test
 		td := t.ParseArgsList(os.Args[1:])
 
-		runTestAndPrintResult(td)
+		runTestAndPrintResult(td, td.GraphFile)
 	} else {
 		log.Fatal("Incorrect arguments specified")
 	}
 }
 
 // runTestAndPrintResults is a helper method to run a specific test set
-func runTestAndPrintResult(td t.TestDirective) {
+func runTestAndPrintResult(td t.TestDirective, testName string) {
 	tResults := t.RunTest(td.GraphFile, td.Algos, td.PoolSize, td.Debug)
 	for _, k := range tResults {
 		//TODO: REFINE TEST OUTPUT, MAYBE EXPORT RESULTS TO FILE
