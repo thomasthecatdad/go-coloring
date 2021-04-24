@@ -35,6 +35,7 @@ type Graph struct {
 //		Neighbors: an array of Node pointers to a Node's neighbors
 type Node struct {
 	Name string
+	Ind int
 	Color int
 	Neighbors []*Node
 }
@@ -63,7 +64,7 @@ func DeepCopy(gr *Graph) Graph {
 	nodeNeighborNameMap = make(map[string][]string)
 
 	for _, node := range gr.Nodes {
-		newNode := Node{Name:node.Name, Color:node.Color}
+		newNode := Node{Name:node.Name, Ind: node.Ind, Color:node.Color}
 		nodeList = append(nodeList, &newNode)
 		nodeNameMap[node.Name] = &newNode
 		nodeNeighborNameMap[node.Name] = GetNamesFromNodeList(node.Neighbors)

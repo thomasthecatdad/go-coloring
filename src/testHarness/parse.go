@@ -86,7 +86,7 @@ func ParseFile(fileName string, colorInit bool) g.Graph {
 			log.Fatalf("Node %s has greater than %d degree", nodeName, deg)
 		}
 
-		newNode := g.Node {Name: nodeName}
+		newNode := g.Node {Name: nodeName, Ind: len(nodeList)}
 		if (colorInit) {
 			newNode.Color = counter
 		}
