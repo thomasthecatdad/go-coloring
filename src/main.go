@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	g "github.com/thomaseb191/go-coloring/graphs"
+	r "github.com/thomaseb191/go-coloring/reductions"
 	t "github.com/thomaseb191/go-coloring/testHarness"
 	"log"
 	"os"
@@ -33,9 +34,7 @@ func main() {
 		testFileName := os.Args[1]
 		testDirectives := t.ParseTestFile(testFileName)
 
-		for _, td := range testDirectives {
-			runTestAndPrintResult(td)
-		}
+		runTestAndPrintResultAndTrends(testDirectives, testFileName)
 	} else if len(inputArgs) >= 3 && len(inputArgs) <= 5 {
 		// Run a singular test
 		td := t.ParseArgsList(os.Args[1:])
@@ -55,4 +54,49 @@ func runTestAndPrintResult(td t.TestDirective) {
 		g.PrintGraph(&k.Output)
 	}
 	fmt.Printf("\n-------------------------\n")
+}
+
+// runTestAndPrintResultAndTrends is a helper method to print results of tests and generate the trend lines
+func runTestAndPrintResultAndTrends(tds []t.TestDirective, testFileName string) {
+	var tNumNodes [r.NumAlgos][]int
+	var tTimeElapsed [r.NumAlgos][]int
+	var tNumberColors [r.NumAlgos][]int
+	var tIsSafe [r.NumAlgos][]bool
+
+	for _, td := range tds {
+		//Run Tests
+		testResults := t.RunTest(td.GraphFile, td.Algos, td.PoolSize, td.Debug)
+
+		algos := td.Algos
+		if len(algos) == 0 {
+			algos = r.AllAlgIds
+		}
+		//Extract and format data into arrays
+		for i, test := range testResults {
+			currAlg := algos[i]
+			tNumNodes[currAlg] = append(tNumNodes[currAlg], len(test.Output.Nodes))
+			tTimeElapsed[currAlg]= append(tTimeElapsed[currAlg], int(test.DurationMillis.Milliseconds()))
+			tNumberColors[currAlg] = append(tNumberColors[currAlg], test.NumColors)
+			tIsSafe[currAlg] = append(tIsSafe[currAlg], test.IsSafe)
+
+			fmt.Printf("Test Name: %s\n", test.Name)
+			fmt.Printf("\tDurationMillis: %d\tNumColors: %d\tIsSafe: %t\n", test.DurationMillis, test.NumColors, test.IsSafe)
+		}
+	}
+	//Format data into DataPoints
+	var tResults map[int]g.DataPoint
+	tResults = make(map[int]g.DataPoint)
+
+	for _, id := range r.AllAlgIds {
+		tResults[id] = g.DataPoint{
+			NumNodes:     tNumNodes[id],
+			TimeElapsed:  tTimeElapsed[id],
+			NumberColors: tNumberColors[id],
+			IsSafe:       tIsSafe[id],
+		}
+	}
+	//TODO: SEND TO JSON
+
+	fmt.Printf("\n-------------------------\n")
+	g.GenerateHTMLForDataPoints(tResults) //TODO: CHANGE GRAPH NAME
 }

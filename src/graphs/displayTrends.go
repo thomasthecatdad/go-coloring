@@ -14,6 +14,7 @@ type DataPoint struct {
 	NumNodes []int
 	TimeElapsed []int
 	NumberColors []int
+	MaxDegree []int //Added by Tyler, no implentation on visualization side yet
 	IsSafe []bool
 }
 
