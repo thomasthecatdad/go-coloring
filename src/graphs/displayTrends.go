@@ -11,9 +11,11 @@ import (
 )
 
 type DataPoint struct {
+	Names []string
 	NumNodes []int
 	TimeElapsed []int
 	NumberColors []int
+	MaxDegree []int //Added by Tyler, no implentation on visualization side yet
 	IsSafe []bool
 }
 

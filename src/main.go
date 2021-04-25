@@ -1,11 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	g "github.com/thomaseb191/go-coloring/graphs"
+	r "github.com/thomaseb191/go-coloring/reductions"
 	t "github.com/thomaseb191/go-coloring/testHarness"
+	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 )
 
 // If running from goland, paths should be res/...
@@ -33,9 +37,7 @@ func main() {
 		testFileName := os.Args[1]
 		testDirectives := t.ParseTestFile(testFileName)
 
-		for _, td := range testDirectives {
-			runTestAndPrintResult(td)
-		}
+		runTestAndPrintResultAndTrends(testDirectives, testFileName)
 	} else if len(inputArgs) >= 3 && len(inputArgs) <= 5 {
 		// Run a singular test
 		td := t.ParseArgsList(os.Args[1:])
@@ -56,3 +58,77 @@ func runTestAndPrintResult(td t.TestDirective) {
 	}
 	fmt.Printf("\n-------------------------\n")
 }
+
+// runTestAndPrintResultAndTrends is a helper method to print results of tests and generate the trend lines
+func runTestAndPrintResultAndTrends(tds []t.TestDirective, testFileName string) {
+	var tTestNames [r.NumAlgos][]string
+	var tNumNodes [r.NumAlgos][]int
+	var tTimeElapsed [r.NumAlgos][]int
+	var tNumberColors [r.NumAlgos][]int
+	var tMaxDegree [r.NumAlgos][]int
+	var tIsSafe [r.NumAlgos][]bool
+
+	for _, td := range tds {
+		//Run Tests
+		testResults := t.RunTest(td.GraphFile, td.Algos, td.PoolSize, td.Debug)
+
+		algos := td.Algos
+		if len(algos) == 0 {
+			algos = r.AllAlgIds
+		}
+		//Extract and format data into arrays
+		for i, test := range testResults {
+			currAlg := algos[i]
+			tTestNames[currAlg] = append(tTestNames[currAlg], test.Name)
+			tNumNodes[currAlg] = append(tNumNodes[currAlg], len(test.Output.Nodes))
+			tTimeElapsed[currAlg]= append(tTimeElapsed[currAlg], int(test.DurationMillis.Milliseconds()))
+			tNumberColors[currAlg] = append(tNumberColors[currAlg], test.NumColors)
+			tMaxDegree[currAlg] = append(tMaxDegree[currAlg], test.Output.MaxDegree)
+			tIsSafe[currAlg] = append(tIsSafe[currAlg], test.IsSafe)
+
+			fmt.Printf("Test Name: %s\n", test.Name)
+			fmt.Printf("\tDurationMillis: %d\tNumColors: %d\tIsSafe: %t\n", test.DurationMillis, test.NumColors, test.IsSafe)
+		}
+	}
+	//Format data into DataPoints
+	var tResults map[int]g.DataPoint
+	tResults = make(map[int]g.DataPoint)
+
+	for _, id := range r.AllAlgIds {
+		tResults[id] = g.DataPoint{
+			Names:		  tTestNames[id],
+			NumNodes:     tNumNodes[id],
+			TimeElapsed:  tTimeElapsed[id],
+			NumberColors: tNumberColors[id],
+			MaxDegree:	  tMaxDegree[id],
+			IsSafe:       tIsSafe[id],
+		}
+	}
+
+	fmt.Printf("\n-------------------------\n")
+	g.GenerateHTMLForDataPoints(tResults) //TODO: CHANGE GRAPH NAME
+	writeJson(tResults, testFileName)
+}
+
+// writeJson is a helper method to write an output to a json output file
+func writeJson(tResults map[int]g.DataPoint, testFileName string) {
+	b, err := json.Marshal(tResults)
+	if err != nil {
+		log.Fatal(err)
+	}
+	outName := testFileName[0:(len(testFileName)-4)] + ".json"
+	if strings.Contains(testFileName, "/") {
+		tempNameArray := strings.Split(testFileName, "/")
+		tempName := tempNameArray[len(tempNameArray)-1]
+		outName = tempName[0:(len(tempName)-4)] + ".json"
+	} else if strings.Contains(testFileName, "\\") {
+		tempNameArray := strings.Split(testFileName, "\\")
+		tempName := tempNameArray[len(tempNameArray)-1]
+		outName = tempName[0:(len(tempName)-4)] + ".json"
+	}
+	err = ioutil.WriteFile("../json/" + outName, b, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+

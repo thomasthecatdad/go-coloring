@@ -7,6 +7,7 @@ import (
 
 // AllAlgIds - A list of all valid algorithm IDs for when t.RunTest is given an empty array.
 var AllAlgIds = []int{0, 1} //TODO: ADD ADDITIONAL IDS
+const NumAlgos = 2 //TODO: MAKE SURE THIS MATCHES THE LENGTH OF ABOVE
 
 // RunReduction calls the respective color-reducing algorithm for a graph, algorithm id, number of worker pools, and debug setting
 // 		gr: a graph that the algorithm will own

@@ -13,11 +13,13 @@ import (
 //		DurationMillis: the Duration of the reduction, designed to be converted to millis in post-processing
 //		Output: the graph produced by the output of the algorithm
 //		NumColors: the number of colors in the output graph. Its correctness should be asserted in post-processing
+//		IsSafe: the result of running g.IsSafe() on the output
 type TestData struct {
 	Name string
 	DurationMillis time.Duration
 	Output g.Graph
 	NumColors int
+	IsSafe bool
 }
 
 // RunTest runs any number of color-reducing algorithms on a given graph file.
@@ -53,13 +55,15 @@ func RunTest(fileName string, algos []int, poolSize int, debug int) []TestData {
 			fmt.Printf("Output IsSafe() for %s_%s in %d: %t\n", initGraph.Name, algoName, elapsed.Nanoseconds(), g.IsSafe(&initGraph))
 			fmt.Printf("\t\tNum Colors: %d\n", numColors)
 		}
+		testName := initGraph.Name + "_" + algoName
 
 
 		newTest := TestData{
-			Name: initGraph.Name + "_" + algoName,
+			Name: testName,
 			DurationMillis: elapsed,
 			Output: outGraph,
 			NumColors: numColors,
+			IsSafe: g.IsSafe(&outGraph),
 		}
 		testDatas = append(testDatas, newTest)
 
@@ -79,6 +83,7 @@ func RunTest(fileName string, algos []int, poolSize int, debug int) []TestData {
 				MaxDegree: outGraph.MaxDegree,
 			}
 			g.GenerateHTMLForMany(graphs)
+			//g.GenerateHTMLForOne(&outGraph, testName)
 		}
 	}
 	return testDatas

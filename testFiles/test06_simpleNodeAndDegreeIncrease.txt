@@ -1,0 +1,4 @@
+% Several increasing node and degree values for simple line chart generation
+../res/Sample03.txt [0,1]
+../res/Graph_N100_D6.txt [0,1]
+../res/Graph_N1000_D10.txt [0,1]
