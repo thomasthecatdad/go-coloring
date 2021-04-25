@@ -11,6 +11,7 @@ import (
 )
 
 type DataPoint struct {
+	Names []string
 	NumNodes []int
 	TimeElapsed []int
 	NumberColors []int

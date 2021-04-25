@@ -1,12 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	g "github.com/thomaseb191/go-coloring/graphs"
 	r "github.com/thomaseb191/go-coloring/reductions"
 	t "github.com/thomaseb191/go-coloring/testHarness"
+	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 )
 
 // If running from goland, paths should be res/...
@@ -58,9 +61,11 @@ func runTestAndPrintResult(td t.TestDirective) {
 
 // runTestAndPrintResultAndTrends is a helper method to print results of tests and generate the trend lines
 func runTestAndPrintResultAndTrends(tds []t.TestDirective, testFileName string) {
+	var tTestNames [r.NumAlgos][]string
 	var tNumNodes [r.NumAlgos][]int
 	var tTimeElapsed [r.NumAlgos][]int
 	var tNumberColors [r.NumAlgos][]int
+	var tMaxDegree [r.NumAlgos][]int
 	var tIsSafe [r.NumAlgos][]bool
 
 	for _, td := range tds {
@@ -74,9 +79,11 @@ func runTestAndPrintResultAndTrends(tds []t.TestDirective, testFileName string) 
 		//Extract and format data into arrays
 		for i, test := range testResults {
 			currAlg := algos[i]
+			tTestNames[currAlg] = append(tTestNames[currAlg], test.Name)
 			tNumNodes[currAlg] = append(tNumNodes[currAlg], len(test.Output.Nodes))
 			tTimeElapsed[currAlg]= append(tTimeElapsed[currAlg], int(test.DurationMillis.Milliseconds()))
 			tNumberColors[currAlg] = append(tNumberColors[currAlg], test.NumColors)
+			tMaxDegree[currAlg] = append(tMaxDegree[currAlg], test.Output.MaxDegree)
 			tIsSafe[currAlg] = append(tIsSafe[currAlg], test.IsSafe)
 
 			fmt.Printf("Test Name: %s\n", test.Name)
@@ -89,14 +96,39 @@ func runTestAndPrintResultAndTrends(tds []t.TestDirective, testFileName string) 
 
 	for _, id := range r.AllAlgIds {
 		tResults[id] = g.DataPoint{
+			Names:		  tTestNames[id],
 			NumNodes:     tNumNodes[id],
 			TimeElapsed:  tTimeElapsed[id],
 			NumberColors: tNumberColors[id],
+			MaxDegree:	  tMaxDegree[id],
 			IsSafe:       tIsSafe[id],
 		}
 	}
-	//TODO: SEND TO JSON
 
 	fmt.Printf("\n-------------------------\n")
 	g.GenerateHTMLForDataPoints(tResults) //TODO: CHANGE GRAPH NAME
+	writeJson(tResults, testFileName)
 }
+
+// writeJson is a helper method to write an output to a json output file
+func writeJson(tResults map[int]g.DataPoint, testFileName string) {
+	b, err := json.Marshal(tResults)
+	if err != nil {
+		log.Fatal(err)
+	}
+	outName := testFileName[0:(len(testFileName)-4)] + ".json"
+	if strings.Contains(testFileName, "/") {
+		tempNameArray := strings.Split(testFileName, "/")
+		tempName := tempNameArray[len(tempNameArray)-1]
+		outName = tempName[0:(len(tempName)-4)] + ".json"
+	} else if strings.Contains(testFileName, "\\") {
+		tempNameArray := strings.Split(testFileName, "\\")
+		tempName := tempNameArray[len(tempNameArray)-1]
+		outName = tempName[0:(len(tempName)-4)] + ".json"
+	}
+	err = ioutil.WriteFile("../json/" + outName, b, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
