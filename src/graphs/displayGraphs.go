@@ -105,7 +105,7 @@ func GenerateHTMLForMany(grs []*Graph) {
 		)
 	}
 	now := time.Now()
-	path := fmt.Sprintf("../html/%s_%s_%d-%d-%dtestResults.html", grs[0].Name, grs[1].Name, now.Second(), now.Minute(), now.Hour())
+	path := fmt.Sprintf("../html/%s_%s_%d-%d-%d-testResults.html", grs[0].Name, grs[1].Name, now.Hour(), now.Minute(), now.Second())
 	f, err := os.Create(path)
 	if err != nil {
 		panic(err)
@@ -125,7 +125,7 @@ func GenerateHTMLForOne(gr *Graph, testName string) {
 	)
 	now := time.Now()
 
-	path := fmt.Sprintf("../html/%s_%s_%d-%d-%d.html", gr.Name, testName, now.Second(), now.Minute(), now.Hour())
+	path := fmt.Sprintf("../html/%s_%s_%d-%d-%d.html", gr.Name, testName, now.Hour(), now.Minute(), now.Second())
 
 	f, errCreate := os.Create(path)
 	if errCreate != nil {

@@ -113,7 +113,7 @@ func GenerateHTMLForDataPoints(data map[int]DataPoint, testFileName string) {
 		generateLineChart(data),
 	)
 	now := time.Now()
-	path := fmt.Sprintf("../html/%s-%d-%d-%d.html", testFileName[0:6], now.Second(), now.Minute(), now.Hour())
+	path := fmt.Sprintf("../html/%s-%d-%d-%d.html", testFileName[0:6], now.Hour(), now.Minute(), now.Second())
 	f, err := os.Create(path)
 	if err != nil {
 		panic(err)
