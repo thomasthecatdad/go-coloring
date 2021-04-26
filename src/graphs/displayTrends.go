@@ -106,19 +106,18 @@ func generateLineChart(data map[int]DataPoint) *charts.Line{
 
 // GenerateHTMLForDataPoints is a
 // Method that converts an arbitrary number of dataPoints to HTML visualisations.
-func GenerateHTMLForDataPoints(data map[int]DataPoint) {
+func GenerateHTMLForDataPoints(data map[int]DataPoint, testFileName string) {
 	fmt.Printf("Generating html...\n")
 	page := components.NewPage()
 	page.AddCharts(
 		generateLineChart(data),
 	)
 	now := time.Now()
-	path := fmt.Sprintf("../html/%d-%d-%d.html", now.Second(), now.Minute(), now.Hour())
+	path := fmt.Sprintf("../html/%s-%d-%d-%d.html", testFileName[0:6], now.Second(), now.Minute(), now.Hour())
 	f, err := os.Create(path)
 	if err != nil {
 		panic(err)
-
 	}
 	page.Render(io.MultiWriter(f))
-	fmt.Printf("Done generating html.\n")
+	fmt.Printf("Done generating html.\t%s\n", path)
 }
