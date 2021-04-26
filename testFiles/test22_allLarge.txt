@@ -1,0 +1,2 @@
+% Several large node number with all Algos
+../res/Graph_N50000_D10.txt [0,1,2,3] -1 0

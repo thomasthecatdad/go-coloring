@@ -25,7 +25,7 @@ var (
 		0 : "Naive",
 		1 : "KW",
 		2 : "Cole-Vishkin",
-		3 : "Linial Replacement",
+		3 : "Distributed Largest-First",
 	}
 )
 

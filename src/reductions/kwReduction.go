@@ -35,7 +35,7 @@ func checkIfNodeInColorSet(colorSet []*g.Node, neighbors []*g.Node) bool {
 
 func combineColorsWithoutNaive(bins [][]*g.Node, gr g.Graph, c chan [][]*g.Node) {
 	maxDegree := gr.MaxDegree
-	fmt.Printf("Number of colors in bins: %d\n", len(bins))
+	//fmt.Printf("Number of colors in bins: %d\n", len(bins))
 	for k := maxDegree + 1; k < len(bins); k++ {
 		for j := 0; j < len(bins[k]); j++ {
 			for color := 0; color < maxDegree + 1; color++ {
@@ -86,7 +86,7 @@ func kwReduction(gr g.Graph, poolSize int, debug int) g.Graph {
 	}
 
 	for len(colorBins) > degree + 1 {
-		fmt.Printf("Number of bins: %d\n", len(colorBins))
+		//fmt.Printf("Number of bins: %d\n", len(colorBins))
 		d := make(chan [][]*g.Node)
 		binIndexes := make([]int, 0)
 		colors := len(colorBins)
