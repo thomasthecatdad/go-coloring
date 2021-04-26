@@ -1,0 +1,5 @@
+% Several increasing node values for constant degree with all algos on sparse graphs
+../res/Graph_N100_D10_sparse.txt [0,1,2,3] -1 0
+../res/Graph_N1000_D10_sparse.txt [0,1,2,3] -1 0
+../res/Graph_N2000_D10_sparse.txt [0,1,2,3] -1 0
+../res/Graph_N10000_D10_sparse.txt [0,1,2,3] -1 0

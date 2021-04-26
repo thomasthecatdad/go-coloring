@@ -56,7 +56,9 @@ func combineColorsWithoutNaive(bins [][]*g.Node, gr g.Graph, c chan [][]*g.Node)
 
 // kwReduction is the main method that runs the KW algorithm.
 func kwReduction(gr g.Graph, poolSize int, debug int) g.Graph {
-	fmt.Printf("Starting KW Reduction \n")
+	if debug % 2 == 1 {
+		fmt.Printf("Starting KW Reduction \n")
+	}
 	degree := gr.MaxDegree
 	startIndexes := make([]int, 0)
 	size := len(gr.Nodes)
