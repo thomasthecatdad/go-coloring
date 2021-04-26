@@ -14,6 +14,7 @@ func RunNaive(gr g.Graph, poolSize int, debug int) g.Graph {
 	if debug % 2 == 1 {
 		fmt.Printf("Starting reduction for %s algorithm...\n", "Naive")
 	}
+	go func() {}()
 
 	size := len(gr.Nodes)
 
@@ -29,7 +30,7 @@ func RunNaive(gr g.Graph, poolSize int, debug int) g.Graph {
 }
 
 func MinColor(n g.Node, maxDegree int) int {
-	for i := 0; i < maxDegree; i++ {
+	for i := 0; i <= maxDegree; i++ {
 		contained := false
 		for _, neighbor := range n.Neighbors {
 			if neighbor.Color == i {

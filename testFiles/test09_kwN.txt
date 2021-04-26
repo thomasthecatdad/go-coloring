@@ -1,0 +1,8 @@
+% Several increasing node values for constant degree with KW
+../res/Graph_N100_D5.txt [1] -1 0
+../res/Graph_N500_D5.txt [1] -1 0
+../res/Graph_N1000_D5.txt [1] -1 0
+../res/Graph_N1500_D5.txt [1] -1 0
+../res/Graph_N2000_D5.txt [1] -1 0
+../res/Graph_N2500_D5.txt [1] -1 0
+../res/Graph_N5000_D5.txt [1] -1 0

@@ -1,0 +1,5 @@
+% Several increasing degree values for nodes with CV
+../res/Graph_N1000_D5.txt [2] -1 0
+../res/Graph_N1000_D10.txt [2] -1 0
+../res/Graph_N1000_D20.txt [2] -1 0
+../res/Graph_N1000_D50.txt [2] -1 0
