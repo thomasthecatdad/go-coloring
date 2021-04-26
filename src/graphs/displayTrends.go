@@ -42,6 +42,19 @@ func generateLineData(data []int) []opts.LineData {
 // In this case we are generating a line chart that graphs Runtime on the Y axis and NumNodes on the X axis.
 func generateLineChart(data map[int]DataPoint) *charts.Line{
 	lineGraph := charts.NewLine()
+	categories := make([]*opts.GraphCategory, 0)
+	numAlgos := len(data)
+
+	for i := 0; i < numAlgos; i++ {
+		categories = append(categories,
+			&opts.GraphCategory{
+				Name: fmt.Sprintf("%s", algoMap[i]),
+				Label: &opts.Label{
+					Show:     true,
+					Position: "right",
+				},
+			})
+	}
 	lineGraph.SetGlobalOptions(
 		charts.WithTitleOpts(opts.Title{
 			Title: "RunTime Analysis for the different algorithms.",
@@ -55,6 +68,11 @@ func generateLineChart(data map[int]DataPoint) *charts.Line{
 		charts.WithXAxisOpts(opts.XAxis{
 			Name: "Number of Nodes",
 		}),
+		charts.WithLegendOpts(opts.Legend{
+			Left: "60%",
+			Show: true,
+			Data: categories,
+		}),
 	)
 
 	// In this case we are assuming the Number of Nodes is what changes in each new run of the test,
@@ -64,7 +82,6 @@ func generateLineChart(data map[int]DataPoint) *charts.Line{
 	for algoNum, dataPoint := range data {
 		lineGraph.AddSeries(algoMap[algoNum], generateLineData(dataPoint.TimeElapsed),
 			charts.WithLabelOpts(opts.Label{Show: true, Position: "bottom"}))
-		charts.WithTitleOpts(opts.Title{Title: algoMap[algoNum]})
 	}
 
 	lineGraph.SetSeriesOptions(
@@ -72,6 +89,7 @@ func generateLineChart(data map[int]DataPoint) *charts.Line{
 			Name: "Average",
 			Type: "average",
 		}),
+
 		charts.WithLineChartOpts(opts.LineChart{
 			Smooth: true,
 		}),
