@@ -40,16 +40,20 @@ func dlf(gr g.Graph, poolSize int, debug int) g.Graph {
 		wglist[i] = &newwg
 	}
 
-	println(incoming)
-	println(outgoing)
+	if debug % 2 == 1 {
+		println(incoming)
+		println(outgoing)
+	}
 
 	wglist[0].Add(len(gr.Nodes))
 	var lock sync.Mutex
 	for _, node := range gr.Nodes {
-		fmt.Println(node.Name, incoming[node.Name], outgoing[node.Name])
+		if debug % 2 == 1 {
+			fmt.Println(node.Name, incoming[node.Name], outgoing[node.Name])
+		}
 		node := node
 		go func() {
-			vertex(node, incoming[node.Name], outgoing[node.Name], gr.MaxDegree, wglist, &lock)
+			vertex(node, incoming[node.Name], outgoing[node.Name], gr.MaxDegree, wglist, &lock, debug)
 			wg.Done()
 			for {
 				for _, ch := range incoming[node.Name] {
@@ -68,7 +72,7 @@ func dlf(gr g.Graph, poolSize int, debug int) g.Graph {
 	return gr
 }
 
-func vertex(n *g.Node, incoming []chan message, outgoing []chan message, maxDegree int, wg []*sync.WaitGroup, lock *sync.Mutex) {
+func vertex(n *g.Node, incoming []chan message, outgoing []chan message, maxDegree int, wg []*sync.WaitGroup, lock *sync.Mutex, debug int) {
 	rand.Seed(time.Now().UnixNano())
 	degree := len(n.Neighbors)
 
@@ -91,7 +95,9 @@ func vertex(n *g.Node, incoming []chan message, outgoing []chan message, maxDegr
 	iter := 0
 
 	for {
-		fmt.Println(n.Name, "round: ", iter, len(incoming))
+		if debug % 2 == 1 {
+			fmt.Println(n.Name, "round: ", iter, len(incoming))
+		}
 		m.rndvalue = rand.Float32()
 		m.color = set.Values()[0].(int)
 		//fmt.Println(outgoing)

@@ -1,0 +1,3 @@
+% Several increasing node values for constant degree with DLF
+../res/Graph_N100_D5.txt [3] -1 0
+../res/Graph_N500_D5.txt [3] -1 0
