@@ -42,24 +42,26 @@ func main() {
 		// Run a singular test
 		td := t.ParseArgsList(os.Args[1:])
 
-		runTestAndPrintResult(td)
+		runTestAndPrintResult(td, td.Debug)
 	} else {
 		log.Fatal("Incorrect arguments specified")
 	}
 }
 
 // runTestAndPrintResults is a helper method to run a specific test set
-func runTestAndPrintResult(td t.TestDirective) {
+func runTestAndPrintResult(td t.TestDirective, debug int) {
 	tResults := t.RunTest(td.GraphFile, td.Algos, td.PoolSize, td.Debug)
 	for _, k := range tResults {
-		//TODO: REFINE TEST OUTPUT, MAYBE EXPORT RESULTS TO FILE
 		fmt.Printf("Test Name: %s\n", k.Name)
-		g.PrintGraph(&k.Output)
+		if debug % 2 == 1 {
+			g.PrintGraph(&k.Output)
+		}
+		fmt.Printf("IsSafe: %t\tNum Colors: %d\n", k.IsSafe, k.NumColors)
 	}
 	fmt.Printf("\n-------------------------\n")
 }
 
-// runTestAndPrintResultAndTrends is a helper method to print results of tests and generate the trend lines
+// runTestAndPrintResultAndTrends is a helper method to print results of tests and generate the trend lines and output results to json
 func runTestAndPrintResultAndTrends(tds []t.TestDirective, testFileName string) {
 	var tTestNames [r.NumAlgos][]string
 	var tNumNodes [r.NumAlgos][]int
@@ -106,8 +108,9 @@ func runTestAndPrintResultAndTrends(tds []t.TestDirective, testFileName string) 
 	}
 
 	fmt.Printf("\n-------------------------\n")
-	g.GenerateHTMLForDataPoints(tResults) //TODO: CHANGE GRAPH NAME
-	writeJson(tResults, testFileName)
+	testOutName := extractTestName(testFileName)
+	g.GenerateHTMLForDataPoints(tResults, testOutName) //TODO: CHANGE GRAPH NAME
+	writeJson(tResults, testOutName)
 }
 
 // writeJson is a helper method to write an output to a json output file
@@ -116,6 +119,13 @@ func writeJson(tResults map[int]g.DataPoint, testFileName string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	err = ioutil.WriteFile("../json/"+testFileName, b, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func extractTestName(testFileName string) string {
 	outName := testFileName[0:(len(testFileName)-4)] + ".json"
 	if strings.Contains(testFileName, "/") {
 		tempNameArray := strings.Split(testFileName, "/")
@@ -126,9 +136,6 @@ func writeJson(tResults map[int]g.DataPoint, testFileName string) {
 		tempName := tempNameArray[len(tempNameArray)-1]
 		outName = tempName[0:(len(tempName)-4)] + ".json"
 	}
-	err = ioutil.WriteFile("../json/" + outName, b, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
+	return outName
 }
 

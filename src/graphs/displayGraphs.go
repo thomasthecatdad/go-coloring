@@ -13,11 +13,11 @@ import (
 // generateEdges is a helper method that
 	//	Generates all of the edges in JSON format for the charts API.
 func generateEdges(gr *Graph) []opts.GraphLink {
-	fmt.Printf("Generating Edges... \n")
+	//fmt.Printf("Generating Edges... \n")
 	edges := make([]opts.GraphLink, 0)
 	for _, x := range gr.Nodes {
 		for _, neighbor := range x.Neighbors {
-			fmt.Printf("Generating Edge between %s and %s\n", x.Name, neighbor.Name)
+			//fmt.Printf("Generating Edge between %s and %s\n", x.Name, neighbor.Name)
 			edges = append(edges,
 				opts.GraphLink {
 					Source: x.Name,
@@ -31,10 +31,10 @@ func generateEdges(gr *Graph) []opts.GraphLink {
 // generateNodes is a helper method that
 	//	Generates all of the nodes in JSON format for the charts API.
 func generateNodes(gr *Graph) []opts.GraphNode {
-	fmt.Printf("Generating Nodes... \n")
+	//fmt.Printf("Generating Nodes... \n")
 	nodes := make([]opts.GraphNode, 0)
 	for _, x := range gr.Nodes {
-		fmt.Printf("Generating Node %s\n", x.Name)
+		//fmt.Printf("Generating Node %s\n", x.Name)
 		nodes = append(nodes,
 			opts.GraphNode {
 				Name: x.Name,
@@ -105,7 +105,7 @@ func GenerateHTMLForMany(grs []*Graph) {
 		)
 	}
 	now := time.Now()
-	path := fmt.Sprintf("../html/%s_%s_%d-%d-%dtestResults.html", grs[0].Name, grs[1].Name, now.Second(), now.Minute(), now.Hour())
+	path := fmt.Sprintf("../html/%s_%s_%d-%d-%d-testResults.html", grs[0].Name, grs[1].Name, now.Hour(), now.Minute(), now.Second())
 	f, err := os.Create(path)
 	if err != nil {
 		panic(err)
@@ -125,7 +125,7 @@ func GenerateHTMLForOne(gr *Graph, testName string) {
 	)
 	now := time.Now()
 
-	path := fmt.Sprintf("../html/%s_%s_%d-%d-%d.html", gr.Name, testName, now.Second(), now.Minute(), now.Hour())
+	path := fmt.Sprintf("../html/%s_%s_%d-%d-%d.html", gr.Name, testName, now.Hour(), now.Minute(), now.Second())
 
 	f, errCreate := os.Create(path)
 	if errCreate != nil {
