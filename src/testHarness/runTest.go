@@ -50,9 +50,10 @@ func RunTest(fileName string, algos []int, poolSize int, debug int) []TestData {
 		//Stop the time, check the algorithm
 		elapsed := time.Since(start)
 		numColors := g.CountColors(&outGraph)
+		isSafe := g.IsSafe(&outGraph)
 
 		if debug % 2 == 1 {
-			fmt.Printf("Output IsSafe() for %s_%s in %d: %t\n", initGraph.Name, algoName, elapsed.Nanoseconds(), g.IsSafe(&outGraph))
+			fmt.Printf("Output IsSafe() for %s_%s in %d: %t\n", initGraph.Name, algoName, elapsed.Nanoseconds(), isSafe)
 			fmt.Printf("\t\tNum Colors: %d\n", numColors)
 		}
 		testName := initGraph.Name + "_" + algoName
@@ -63,7 +64,7 @@ func RunTest(fileName string, algos []int, poolSize int, debug int) []TestData {
 			DurationMillis: elapsed,
 			Output: outGraph,
 			NumColors: numColors,
-			IsSafe: g.IsSafe(&outGraph),
+			IsSafe: isSafe,
 		}
 		testDatas = append(testDatas, newTest)
 
