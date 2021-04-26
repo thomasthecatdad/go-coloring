@@ -46,6 +46,7 @@ func IsSafe(gr *Graph) bool {
 	for _, node := range gr.Nodes {
 		for _, neighbor := range node.Neighbors {
 			if node.Color == neighbor.Color {
+				fmt.Printf("Node %s and %s are neighbors with same color %d == %d\n", node.Name, neighbor.Name, neighbor.Color, node.Color)
 				return false
 			}
 		}

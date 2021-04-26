@@ -77,10 +77,41 @@ func checkIfNodeInColorSet(colorSet []*g.Node, neighbors []*g.Node) bool {
 				break
 			}
 		}
-
 	}
 	return hasAny
 }
+
+func checkIfNeighborInSameColor(colorSet []*g.Node) bool {
+	fmt.Printf("Checking if neighbors have same colors.\n")
+	//colorMap := make(map[*g.Node]int)
+	//for _, node := range colorSet {
+	//	if occurrences, ok := colorMap[node]; ok {
+	//		if occurrences > 0 {
+	//			fmt.Printf("Node %s is a neighbor with another node in this color.\n", node.Name)
+	//			return true
+	//		}
+	//	}
+	//	for _, neighbor := range node.Neighbors {
+	//		if _, ok := colorMap[neighbor]; ok {
+	//			colorMap[neighbor]++
+	//		}
+	//	}
+	//}
+	for _, node := range colorSet {
+		for _, neighbor := range node.Neighbors {
+			for _, temp := range colorSet {
+				fmt.Printf("Node %s is a neighbor with another node in this color.\n", node.Name)
+				if temp.Name == neighbor.Name {
+					return true
+				}
+			}
+		}
+	}
+	return false
+
+}
+
+
 
 func combineColorsWithoutNaive(bins [][]*g.Node, gr g.Graph, c chan [][]*g.Node) {
 	maxDegree := gr.MaxDegree
@@ -97,8 +128,10 @@ func combineColorsWithoutNaive(bins [][]*g.Node, gr g.Graph, c chan [][]*g.Node)
 		}
 	}
 	if len(bins) < maxDegree + 1 {
+		printBins(bins)
 		c <- bins
 	} else {
+		printBins(bins[:maxDegree + 1])
 		c <- bins[:maxDegree + 1]
 	}
 }
@@ -171,7 +204,7 @@ func kwReduction(gr g.Graph, poolSize int, debug int) g.Graph {
 	// colorBins = append(colorBins, newBins...)
 
 
-	for len(colorBins) > degree+1 {
+	for len(colorBins) > degree + 1 {
 		fmt.Printf("Number of bins: %d\n", len(colorBins))
 		printBins(colorBins)
 		d := make(chan [][]*g.Node)
@@ -215,6 +248,8 @@ func kwReduction(gr g.Graph, poolSize int, debug int) g.Graph {
 		colorBins = tempBins
 		tempBins = make([][]*g.Node, 0)
 	}
+	graph := convertBinsToGraph(colorBins, gr)
+	g.PrintGraph(&graph)
 	return convertBinsToGraph(colorBins, gr)
 }
 
