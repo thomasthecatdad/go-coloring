@@ -170,14 +170,16 @@ func kwReduction(gr g.Graph, poolSize int, debug int) g.Graph {
 	}
 	// colorBins = append(colorBins, newBins...)
 
-	for len(colorBins) > degree + 1 {
+
+	for len(colorBins) > degree+1 {
 		fmt.Printf("Number of bins: %d\n", len(colorBins))
+		printBins(colorBins)
 		d := make(chan [][]*g.Node)
 		binIndexes := make([]int, 0)
 		colors := len(colorBins)
 
 		for x := 0; x < colors; x++ {
-			if x % (2 * (degree + 1)) == 0 {
+			if x%(2*(degree+1)) == 0 {
 				binIndexes = append(binIndexes, x)
 			}
 		}
@@ -186,15 +188,15 @@ func kwReduction(gr g.Graph, poolSize int, debug int) g.Graph {
 		for i := 0; i < len(binIndexes); i++ {
 			currStart := binIndexes[i]
 			var nextStart int
-			if i + 1 != len(binIndexes) {
-				nextStart = binIndexes[i + 1]
+			if i+1 != len(binIndexes) {
+				nextStart = binIndexes[i+1]
 			} else {
 				nextStart = len(colorBins)
 			}
 			go combineColorsWithoutNaive(colorBins[currStart:nextStart], gr, d)
 		}
 		for i := 0; i < len(binIndexes); i++ {
-			bins := <- d
+			bins := <-d
 			tempBins = append(tempBins, bins...)
 		}
 		close(d)
@@ -213,6 +215,16 @@ func kwReduction(gr g.Graph, poolSize int, debug int) g.Graph {
 		tempBins = make([][]*g.Node, 0)
 	}
 	return convertBinsToGraph(colorBins, gr)
+}
+
+func printBins(colorBins [][]*g.Node) {
+	for i, b := range colorBins {
+		fmt.Printf("Bin #%d\t", i)
+		for _, n := range b {
+			fmt.Printf("%s ", n.Name)
+		}
+		fmt.Printf("\n")
+	}
 }
 
 
