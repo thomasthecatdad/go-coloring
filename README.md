@@ -25,3 +25,4 @@ We will also benchmark and visualize the differences in runtime between the diff
 - [Core color-reduction examples](https://stanford.edu/~rezab/classes/cme323/S16/projects_reports/bae.pdf)
 - [Additional color-reduction examples](https://www.cs.bgu.ac.il/~elkinm/book.pdf)
 - [Golang visualizations](https://golangexample.com/a-graceful-data-visualizing-library-for-golang)
+- [Distributed Largest-First](https://ieeexplore-ieee-org.proxy.lib.duke.edu/document/1115204)
