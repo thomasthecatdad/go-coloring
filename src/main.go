@@ -56,7 +56,7 @@ func runTestAndPrintResult(td t.TestDirective, debug int) {
 		if debug % 2 == 1 {
 			g.PrintGraph(&k.Output)
 		}
-		fmt.Printf("IsSafe: %t\tNum Colors: %d\n", k.IsSafe, k.NumColors)
+		fmt.Printf("IsSafe: %t\tNum Colors: %d\n", g.IsSafe(&k.Output), k.NumColors)
 	}
 	fmt.Printf("\n-------------------------\n")
 }

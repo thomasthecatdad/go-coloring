@@ -11,61 +11,13 @@ func runNaiveGoRoutine(gr g.Graph, poolSize int, debug int, c chan g.Graph) {
 }
 
 // convertBinsToGraph is a helper method that converts color "bins" into graphs.
-func convertBinsToGraph(bins [][]*g.Node, original g.Graph) g.Graph {
-	nodes := make([]*g.Node, 0)
+func convertBinsToGraph(bins [][]*g.Node, original *g.Graph) *g.Graph {
 	for color := 0; color < len(bins); color++ {
 		for _, node := range bins[color] {
-			nodes = append(nodes,
-				&g.Node{
-					Name: node.Name,
-					Color: color,
-					Neighbors: node.Neighbors,
-				})
+			node.Color = color
 		}
 	}
-
-	return g.Graph{
-		Name: original.Name,
-		Description: "Color Reduced with KW",
-		MaxDegree: original.MaxDegree,
-		Nodes: nodes,
-	}
-}
-
-// combineColors is a helper method that runs the naive algorithms on smaller bins and combines them
-// into a new set of smaller bins.
-func combineColors(bins [][]*g.Node, gr g.Graph, c chan [][]*g.Node) {
-	binsGraph := convertBinsToGraph(bins, gr)
-	newGr := RunNaive(binsGraph, -1, 3)
-	colorToIndex := make(map[int]int)
-	latestIndex := 0
-	numColors := g.CountColors(&newGr)
-	newBins := make([][]*g.Node, numColors)
-	for _, node := range newGr.Nodes {
-		if _, ok := colorToIndex[node.Color]; ! ok {
-			colorToIndex[node.Color] = latestIndex
-			latestIndex++
-		}
-		newBins[colorToIndex[node.Color]] = append(newBins[colorToIndex[node.Color]], node)
-	}
-	c <- newBins
-}
-
-func combineColorsSequential(bins [][]*g.Node, gr g.Graph) [][]*g.Node{
-	binsGraph := convertBinsToGraph(bins, gr)
-	newGr := RunNaive(binsGraph, -1, 3)
-	colorToIndex := make(map[int]int)
-	latestIndex := 0
-	numColors := g.CountColors(&newGr)
-	newBins := make([][]*g.Node, numColors)
-	for _, node := range newGr.Nodes {
-		if _, ok := colorToIndex[node.Color]; ! ok {
-			colorToIndex[node.Color] = latestIndex
-			latestIndex++
-		}
-		newBins[colorToIndex[node.Color]] = append(newBins[colorToIndex[node.Color]], node)
-	}
-	return newBins
+	return original
 }
 
 func checkIfNodeInColorSet(colorSet []*g.Node, neighbors []*g.Node) bool {
@@ -80,38 +32,6 @@ func checkIfNodeInColorSet(colorSet []*g.Node, neighbors []*g.Node) bool {
 	}
 	return hasAny
 }
-
-func checkIfNeighborInSameColor(colorSet []*g.Node) bool {
-	fmt.Printf("Checking if neighbors have same colors.\n")
-	//colorMap := make(map[*g.Node]int)
-	//for _, node := range colorSet {
-	//	if occurrences, ok := colorMap[node]; ok {
-	//		if occurrences > 0 {
-	//			fmt.Printf("Node %s is a neighbor with another node in this color.\n", node.Name)
-	//			return true
-	//		}
-	//	}
-	//	for _, neighbor := range node.Neighbors {
-	//		if _, ok := colorMap[neighbor]; ok {
-	//			colorMap[neighbor]++
-	//		}
-	//	}
-	//}
-	for _, node := range colorSet {
-		for _, neighbor := range node.Neighbors {
-			for _, temp := range colorSet {
-				fmt.Printf("Node %s is a neighbor with another node in this color.\n", node.Name)
-				if temp.Name == neighbor.Name {
-					return true
-				}
-			}
-		}
-	}
-	return false
-
-}
-
-
 
 func combineColorsWithoutNaive(bins [][]*g.Node, gr g.Graph, c chan [][]*g.Node) {
 	maxDegree := gr.MaxDegree
@@ -128,10 +48,8 @@ func combineColorsWithoutNaive(bins [][]*g.Node, gr g.Graph, c chan [][]*g.Node)
 		}
 	}
 	if len(bins) < maxDegree + 1 {
-		printBins(bins)
 		c <- bins
 	} else {
-		printBins(bins[:maxDegree + 1])
 		c <- bins[:maxDegree + 1]
 	}
 }
@@ -155,41 +73,6 @@ func kwReduction(gr g.Graph, poolSize int, debug int) g.Graph {
 		}
 	}
 
-	//for i := 0; i < len(startIndexes); i++ {
-	//	currStart := startIndexes[i]
-	//	var nextStart int
-	//	if i + 1 != len(startIndexes) {
-	//		nextStart = startIndexes[i + 1]
-	//	} else {
-	//		nextStart = size
-	//	}
-	//	grCopy := g.Graph {
-	//		Name: gr.Name,
-	//		Description: gr.Description,
-	//		MaxDegree: gr.MaxDegree,
-	//		Nodes: gr.Nodes[currStart:nextStart],
-	//	}
-	//	go runNaiveGoRoutine(grCopy, poolSize, debug, c)
-	//}
-	// colorBins := make([][]*g.Node, 0)
-
-	//for i := 0; i < len(startIndexes); i++{
-	//	graph := <- c
-	//	numColors := g.CountColors(&graph)
-	//	newBins := make([][]*g.Node, numColors)
-	//	colorToIndex := make(map[int]int)
-	//	latestIndex := 0
-	//	for _, node := range graph.Nodes {
-	//		if _, ok := colorToIndex[node.Color]; ! ok {
-	//			colorToIndex[node.Color] = latestIndex
-	//			latestIndex++
-	//		}
-	//		newBins[colorToIndex[node.Color]] = append(newBins[colorToIndex[node.Color]], node)
-	//	}
-	//	colorBins = append(colorBins, newBins...)
-	//}
-	//close(c)
-
 	numColors := g.CountColors(&gr)
 	colorBins := make([][]*g.Node, numColors)
 	colorToIndex := make(map[int]int)
@@ -201,12 +84,9 @@ func kwReduction(gr g.Graph, poolSize int, debug int) g.Graph {
 		}
 		colorBins[colorToIndex[node.Color]] = append(colorBins[colorToIndex[node.Color]], node)
 	}
-	// colorBins = append(colorBins, newBins...)
-
 
 	for len(colorBins) > degree + 1 {
 		fmt.Printf("Number of bins: %d\n", len(colorBins))
-		printBins(colorBins)
 		d := make(chan [][]*g.Node)
 		binIndexes := make([]int, 0)
 		colors := len(colorBins)
@@ -234,33 +114,12 @@ func kwReduction(gr g.Graph, poolSize int, debug int) g.Graph {
 		}
 
 		close(d)
-		//for i := 0; i < len(binIndexes); i++ {
-		//	currStart := binIndexes[i]
-		//		var nextStart int
-		//		if i + 1 != len(binIndexes) {
-		//			nextStart = binIndexes[i + 1]
-		//		} else {
-		//			nextStart = len(colorBins)
-		//		}
-		//		bins := combineColorsSequential(colorBins[currStart:nextStart], gr)
-		//		tempBins = append(tempBins, bins...)
-		//}
+
 		colorBins = tempBins
 		tempBins = make([][]*g.Node, 0)
 	}
-	graph := convertBinsToGraph(colorBins, gr)
-	g.PrintGraph(&graph)
-	return convertBinsToGraph(colorBins, gr)
-}
-
-func printBins(colorBins [][]*g.Node) {
-	for i, b := range colorBins {
-		fmt.Printf("Bin #%d\t", i)
-		for _, n := range b {
-			fmt.Printf("%s ", n.Name)
-		}
-		fmt.Printf("\n")
-	}
+	graph := convertBinsToGraph(colorBins, &gr)
+	return *graph
 }
 
 
