@@ -88,9 +88,9 @@ func combineColorsWithoutNaive(bins [][]*g.Node, gr g.Graph, c chan [][]*g.Node)
 	for k := maxDegree + 1; k < len(bins); k++ {
 		for j := 0; j < len(bins[k]); j++ {
 			for color := 0; color < maxDegree + 1; color++ {
-				hasAny := checkIfNodeInColorSet(bins[color], gr.Nodes[j].Neighbors)
+				hasAny := checkIfNodeInColorSet(bins[color], bins[k][j].Neighbors)
 				if ! hasAny {
-					bins[color] = append(bins[color], gr.Nodes[j])
+					bins[color] = append(bins[color], bins[k][j])
 					break
 				}
 			}
@@ -197,6 +197,7 @@ func kwReduction(gr g.Graph, poolSize int, debug int) g.Graph {
 			bins := <- d
 			tempBins = append(tempBins, bins...)
 		}
+
 		close(d)
 		//for i := 0; i < len(binIndexes); i++ {
 		//	currStart := binIndexes[i]
