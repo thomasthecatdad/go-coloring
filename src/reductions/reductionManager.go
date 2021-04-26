@@ -7,8 +7,7 @@ import (
 
 // AllAlgIds - A list of all valid algorithm IDs for when t.RunTest is given an empty array.
 var AllAlgIds = []int{0, 1, 2, 3} //TODO: ADD ADDITIONAL IDS
-const NumAlgos = 4 //TODO: MAKE SURE THIS MATCHES THE LENGTH OF ABOVE
-
+const NumAlgos = 4                //TODO: MAKE SURE THIS MATCHES THE LENGTH OF ABOVE
 
 // RunReduction calls the respective color-reducing algorithm for a graph, algorithm id, number of worker pools, and debug setting
 // 		gr: a graph that the algorithm will own
@@ -30,10 +29,9 @@ func RunReduction(gr g.Graph, id int, poolSize int, debug int) (g.Graph, string)
 		outGraph = CVReduction(gr, poolSize, debug)
 		algoName = "Cole-Vishkin"
 	case 3:
-		outGraph = dlf(gr, poolSize, debug)
+		outGraph = dlfShared(gr, poolSize, debug)
 		algoName = "Distributed Largest-First"
 	//TODO: ADD ADDITIONAL ALGORITHMS
-
 
 	default:
 		log.Fatalf("No such algorithm found for %d.\n", id)
