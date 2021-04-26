@@ -28,7 +28,7 @@ func main() {
 
 		tResults := t.RunTest("../res/Sample02.txt", []int{}, -1, 3)
 		for i := 0; i < len(tResults); i++ {
-			fmt.Printf("Duration of test %s: %d with %d colors\n", tResults[i].Name, tResults[i].DurationMillis.Milliseconds(), tResults[i].NumColors)
+			fmt.Printf("Duration of test %s: %d with %d colors\n", tResults[i].Name, tResults[i].DurationMillis.Nanoseconds(), tResults[i].NumColors)
 			g.PrintGraph(&tResults[i].Output)
 		}
 
@@ -56,7 +56,7 @@ func runTestAndPrintResult(td t.TestDirective, debug int) {
 		if debug % 2 == 1 {
 			g.PrintGraph(&k.Output)
 		}
-		fmt.Printf("IsSafe: %t\tNum Colors: %d\n", g.IsSafe(&k.Output), k.NumColors)
+		fmt.Printf("IsSafe: %t\tNum Colors: %d\tDurationNanos: %d\n", k.IsSafe, k.NumColors, k.DurationMillis.Nanoseconds())
 	}
 	fmt.Printf("\n-------------------------\n")
 }
@@ -83,13 +83,13 @@ func runTestAndPrintResultAndTrends(tds []t.TestDirective, testFileName string) 
 			currAlg := algos[i]
 			tTestNames[currAlg] = append(tTestNames[currAlg], test.Name)
 			tNumNodes[currAlg] = append(tNumNodes[currAlg], len(test.Output.Nodes))
-			tTimeElapsed[currAlg]= append(tTimeElapsed[currAlg], int(test.DurationMillis.Milliseconds()))
+			tTimeElapsed[currAlg]= append(tTimeElapsed[currAlg], int(test.DurationMillis.Nanoseconds())) //NOTE: CHANGED TO NANOSECONDS
 			tNumberColors[currAlg] = append(tNumberColors[currAlg], test.NumColors)
 			tMaxDegree[currAlg] = append(tMaxDegree[currAlg], test.Output.MaxDegree)
 			tIsSafe[currAlg] = append(tIsSafe[currAlg], test.IsSafe)
 
 			fmt.Printf("Test Name: %s\n", test.Name)
-			fmt.Printf("\tDurationMillis: %d\tNumColors: %d\tIsSafe: %t\n", test.DurationMillis, test.NumColors, test.IsSafe)
+			fmt.Printf("\tDurationNanos: %d\tNumColors: %d\tIsSafe: %t\n", test.DurationMillis.Nanoseconds(), test.NumColors, test.IsSafe)
 		}
 	}
 	//Format data into DataPoints

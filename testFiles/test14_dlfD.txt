@@ -1,0 +1,5 @@
+% Several increasing degree values for nodes with DLF
+../res/Graph_N1000_D5.txt [3] -1 0
+../res/Graph_N1000_D10.txt [3] -1 0
+../res/Graph_N1000_D20.txt [3] -1 0
+../res/Graph_N1000_D50.txt [3] -1 0

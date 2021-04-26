@@ -41,6 +41,20 @@ func generateLineData(data []int) []opts.LineData {
 // generateLineChart is a method that generates a new line chart based on the the map of algorithms to DataPoint objects.
 // In this case we are generating a line chart that graphs Runtime on the Y axis and NumNodes on the X axis.
 func generateLineChart(data map[int]DataPoint) *charts.Line{
+	degIV := IsDegreeOnlyIV(data)
+
+	var lineGraph *charts.Line
+	if degIV {
+		lineGraph = generateDegreeLineChart(data)
+	} else {
+		lineGraph = generateNodeLineChart(data)
+	}
+
+
+	return lineGraph
+}
+
+func generateNodeLineChart(data map[int]DataPoint) *charts.Line {
 	lineGraph := charts.NewLine()
 	categories := make([]*opts.GraphCategory, 0)
 	numAlgos := len(data)
@@ -77,7 +91,14 @@ func generateLineChart(data map[int]DataPoint) *charts.Line{
 
 	// In this case we are assuming the Number of Nodes is what changes in each new run of the test,
 	// we are assuming MaxDegree is the same for all runs of the tests.
-	lineGraph.SetXAxis(data[0].NumNodes)
+	var algInd int
+	for i, v := range data {
+		if v.NumNodes != nil {
+			algInd = i
+			break
+		}
+	}
+	lineGraph.SetXAxis(data[algInd].NumNodes)
 
 	for algoNum, dataPoint := range data {
 		lineGraph.AddSeries(algoMap[algoNum], generateLineData(dataPoint.TimeElapsed),
@@ -91,7 +112,7 @@ func generateLineChart(data map[int]DataPoint) *charts.Line{
 		}),
 
 		charts.WithLineChartOpts(opts.LineChart{
-			Smooth: true,
+			Smooth: false,
 		}),
 		charts.WithMarkPointStyleOpts(opts.MarkPointStyle{
 			Label: &opts.Label{
@@ -100,8 +121,92 @@ func generateLineChart(data map[int]DataPoint) *charts.Line{
 			},
 		}),
 	)
-
 	return lineGraph
+}
+
+func generateDegreeLineChart(data map[int]DataPoint) *charts.Line {
+	lineGraph := charts.NewLine()
+	categories := make([]*opts.GraphCategory, 0)
+	numAlgos := len(data)
+
+	for i := 0; i < numAlgos; i++ {
+		categories = append(categories,
+			&opts.GraphCategory{
+				Name: fmt.Sprintf("%s", algoMap[i]),
+				Label: &opts.Label{
+					Show:     true,
+					Position: "right",
+				},
+			})
+	}
+	lineGraph.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{
+			Title: "RunTime Analysis for the different algorithms.",
+		}),
+		charts.WithYAxisOpts(opts.YAxis{
+			Name: "Cost time(ns)",
+			SplitLine: &opts.SplitLine{
+				Show: false,
+			},
+		}),
+		charts.WithXAxisOpts(opts.XAxis{
+			Name: "Max Degree",
+		}),
+		charts.WithLegendOpts(opts.Legend{
+			Left: "60%",
+			Show: true,
+			Data: categories,
+		}),
+	)
+
+	// In this case we are assuming the Number of Nodes is what changes in each new run of the test,
+	// we are assuming MaxDegree is the same for all runs of the tests.
+	var algInd int
+	for i, v := range data {
+		if v.NumNodes != nil {
+			algInd = i
+			break
+		}
+	}
+	lineGraph.SetXAxis(data[algInd].MaxDegree)
+
+	for algoNum, dataPoint := range data {
+		lineGraph.AddSeries(algoMap[algoNum], generateLineData(dataPoint.TimeElapsed),
+			charts.WithLabelOpts(opts.Label{Show: true, Position: "bottom"}))
+	}
+
+	lineGraph.SetSeriesOptions(
+		charts.WithMarkLineNameTypeItemOpts(opts.MarkLineNameTypeItem{
+			Name: "Average",
+			Type: "average",
+		}),
+
+		charts.WithLineChartOpts(opts.LineChart{
+			Smooth: false,
+		}),
+		charts.WithMarkPointStyleOpts(opts.MarkPointStyle{
+			Label: &opts.Label{
+				Show:      true,
+				Formatter: "{a}: {b}",
+			},
+		}),
+	)
+	return lineGraph
+}
+
+func IsDegreeOnlyIV(data map[int]DataPoint) bool {
+	numNodes := 0
+	for _, alg := range data {
+		if alg.NumNodes != nil {
+			for _, p := range alg.NumNodes {
+				if numNodes != 0 && p != numNodes {
+					return false
+				}
+				numNodes = p
+			}
+		}
+	}
+	return true
 }
 
 // GenerateHTMLForDataPoints is a

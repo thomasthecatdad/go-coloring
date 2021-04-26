@@ -49,6 +49,7 @@ func RunTest(fileName string, algos []int, poolSize int, debug int) []TestData {
 
 		//Stop the time, check the algorithm
 		elapsed := time.Since(start)
+		//fmt.Println(start, time.Now(), elapsed.Milliseconds(), elapsed.Nanoseconds())
 		numColors := g.CountColors(&outGraph)
 		isSafe := g.IsSafe(&outGraph)
 
