@@ -26,3 +26,4 @@ We will also benchmark and visualize the differences in runtime between the diff
 - [Additional color-reduction examples](https://www.cs.bgu.ac.il/~elkinm/book.pdf)
 - [Golang visualizations](https://golangexample.com/a-graceful-data-visualizing-library-for-golang)
 - [Distributed Largest-First](https://ieeexplore-ieee-org.proxy.lib.duke.edu/document/1115204)
+- [Cole-Vishkin Reduction](https://www.zhengqunkoo.com:8443/zhengqunkoo/site/src/commit/ebbab6e24911a02c97b380f2e39f06d9c3e83770/worker.js)
