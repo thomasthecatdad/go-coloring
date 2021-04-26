@@ -51,6 +51,58 @@ func combineColors(bins [][]*g.Node, gr g.Graph, c chan [][]*g.Node) {
 	c <- newBins
 }
 
+func combineColorsSequential(bins [][]*g.Node, gr g.Graph) [][]*g.Node{
+	binsGraph := convertBinsToGraph(bins, gr)
+	newGr := RunNaive(binsGraph, -1, 3)
+	colorToIndex := make(map[int]int)
+	latestIndex := 0
+	numColors := g.CountColors(&newGr)
+	newBins := make([][]*g.Node, numColors)
+	for _, node := range newGr.Nodes {
+		if _, ok := colorToIndex[node.Color]; ! ok {
+			colorToIndex[node.Color] = latestIndex
+			latestIndex++
+		}
+		newBins[colorToIndex[node.Color]] = append(newBins[colorToIndex[node.Color]], node)
+	}
+	return newBins
+}
+
+func checkIfNodeInColorSet(colorSet []*g.Node, neighbors []*g.Node) bool {
+	hasAny := false
+	for _, k := range neighbors {
+		for _, node := range colorSet {
+			if k.Name == node.Name {
+				hasAny = true
+				break
+			}
+		}
+
+	}
+	return hasAny
+}
+
+func combineColorsWithoutNaive(bins [][]*g.Node, gr g.Graph, c chan [][]*g.Node) {
+	maxDegree := gr.MaxDegree
+	fmt.Printf("Number of colors in bins: %d\n", len(bins))
+	for k := maxDegree + 1; k < len(bins); k++ {
+		for j := 0; j < len(bins[k]); j++ {
+			for color := 0; color < maxDegree + 1; color++ {
+				hasAny := checkIfNodeInColorSet(bins[color], gr.Nodes[j].Neighbors)
+				if ! hasAny {
+					bins[color] = append(bins[color], gr.Nodes[j])
+					break
+				}
+			}
+		}
+	}
+	if len(bins) < maxDegree + 1 {
+		c <- bins
+	} else {
+		c <- bins[:maxDegree + 1]
+	}
+}
+
 // kwReduction is the main method that runs the KW algorithm.
 func kwReduction(gr g.Graph, poolSize int, debug int) g.Graph {
 	fmt.Printf("Starting KW Reduction \n")
@@ -139,13 +191,24 @@ func kwReduction(gr g.Graph, poolSize int, debug int) g.Graph {
 			} else {
 				nextStart = len(colorBins)
 			}
-			go combineColors(colorBins[currStart:nextStart], gr, d)
+			go combineColorsWithoutNaive(colorBins[currStart:nextStart], gr, d)
 		}
 		for i := 0; i < len(binIndexes); i++ {
 			bins := <- d
 			tempBins = append(tempBins, bins...)
 		}
 		close(d)
+		//for i := 0; i < len(binIndexes); i++ {
+		//	currStart := binIndexes[i]
+		//		var nextStart int
+		//		if i + 1 != len(binIndexes) {
+		//			nextStart = binIndexes[i + 1]
+		//		} else {
+		//			nextStart = len(colorBins)
+		//		}
+		//		bins := combineColorsSequential(colorBins[currStart:nextStart], gr)
+		//		tempBins = append(tempBins, bins...)
+		//}
 		colorBins = tempBins
 		tempBins = make([][]*g.Node, 0)
 	}
