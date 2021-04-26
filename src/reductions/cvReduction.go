@@ -8,12 +8,15 @@ import (
 	"math/rand"
 )
 
+// A Forest is defined as a collection of disjoint trees, where each node is a ForestNode
 type Forest struct {
 	ID    int
 	Root  *ForestNode
 	Nodes map[int]*ForestNode
 }
 
+// A ForestNode is a node in a Forest, including a Pointer to its relevant node in the original Graph, as well as color, tempcolor, and neighbor information
+// Forests are directed, meaning that every node except roots will have a Parent
 type ForestNode struct {
 	Pointer   *g.Node
 	Color     int
@@ -22,6 +25,12 @@ type ForestNode struct {
 	Neighbors []*ForestNode //includes Parent
 }
 
+// myChannelData is a struct for communicating data between the goroutines of a CV reduction algorithm.
+//	Op refers to the current operation state
+//	Val is the most important value
+//	Extra is the next most important value
+//	F is a pointer to a Forest if necessary
+//	Threshold is the level to which down shifting should occur
 type myChannelData struct {
 	Op        int
 	Val       int
@@ -30,9 +39,58 @@ type myChannelData struct {
 	Threshold int
 }
 
+//global variables to keep track of which color value to set and the number of nodes in the overall graph
 var isTemp bool
 var numAllNodes int
 
+// CVReduction is based on the Cole-Vishkin color reduction algorithm and is comprised of the following steps
+//		Creation of a worker pool of goroutines
+//		[Parallel] Decomposition into maxDegree Forests
+//		[Parallel] CV Reduction of each forest into 6 colors
+//		[Parallel] Down-shifting of 6 colors into 3 colors
+//		Unification of the various forests into a MaxDegree+1 coloring
+// CVReduction is based on https://www.cs.bgu.ac.il/~elkinm/book.pdf and https://www.mpi-inf.mpg.de/fileadmin/inf/d1/teaching/winter15/tods/ToDS.pdf
+// It is described as having O(Delta^2) + logstar(n) runtime. Because of practical Forest Decomposition, however, our algorithm runs in O(Delta^2) + logstar(n) + O(n) time
+func CVReduction(gr g.Graph, poolSize int, debug int) g.Graph {
+	if debug%2 == 1 {
+		fmt.Printf("Starting CV Reduction \n")
+	}
+	isTemp = true
+	numAllNodes = len(gr.Nodes)
+	mainChannel := make(chan myChannelData)
+	channels := buildWorkers(gr, poolSize, mainChannel, debug)
+
+	if debug%2 == 1 {
+		fmt.Printf("\tStarting Forest Decomposition \n")
+	}
+
+	forests := forestDecomposition(gr, channels, mainChannel, debug)
+	for _, f := range forests {
+		for _, node := range f.Nodes {
+			bfsForest(node)
+		}
+		// Cannot be made parallel for bfs
+	}
+
+	if debug%2 == 1 {
+		fmt.Printf("\tStarting CV to 6 \n")
+	}
+
+	for _, f := range forests {
+		cvForestTo6(f, channels, mainChannel, debug)
+		shiftDown(f, channels, mainChannel, debug)
+		//printForest(f)
+	}
+
+	if debug%2 == 1 {
+		fmt.Printf("\tStarting Forest Unification \n")
+	}
+
+	unifyForests2(forests, &gr)
+	return gr
+}
+
+// forestDecomposition is the leader implementation of Forest Decomposition
 func forestDecomposition(gr g.Graph, c []chan myChannelData, mainChan chan myChannelData, debug int) []*Forest {
 	op := 0
 	numDone := 0
@@ -49,7 +107,7 @@ func forestDecomposition(gr g.Graph, c []chan myChannelData, mainChan chan myCha
 	for i, ch := range c {
 		startingInd := len(gr.Nodes) / numChannels * i
 		endingInd := len(gr.Nodes) / numChannels * (i + 1)
-		if i == len(c) - 1 {
+		if i == len(c)-1 {
 			endingInd = len(gr.Nodes)
 		}
 		ch <- myChannelData{
@@ -78,9 +136,6 @@ func forestDecomposition(gr g.Graph, c []chan myChannelData, mainChan chan myCha
 					Parent:    nil,
 					Neighbors: make([]*ForestNode, 0),
 				}
-				if child.Color == 0 {
-					fmt.Printf("CHILD COLOR IS 0 FOR %s\n", child.Name)
-				}
 				fPtr.Nodes[child.Ind] = &newChild
 				existingC = &newChild
 			}
@@ -93,9 +148,6 @@ func forestDecomposition(gr g.Graph, c []chan myChannelData, mainChan chan myCha
 					TempColor: parent.Color,
 					Parent:    nil,
 					Neighbors: []*ForestNode{existingC},
-				}
-				if parent.Color == 0 {
-					fmt.Printf("PARENT COLOR IS 0 FOR %s\n", parent.Name)
 				}
 				fPtr.Nodes[parent.Ind] = &newParent
 				existingP = &newParent
@@ -110,6 +162,8 @@ func forestDecomposition(gr g.Graph, c []chan myChannelData, mainChan chan myCha
 	return myForests
 }
 
+// forestDecompositionWorker is the worker implementation of Forest Decomposition based on the Panconesi and Rizzi Decomposition
+// Each edge that is divided into a forest is reported to the main thread
 func forestDecompositionWorker(gr *g.Graph, startingInd int, endingInd int, mainChannel chan myChannelData) {
 	for k := startingInd; k < endingInd && k < len(gr.Nodes); k++ {
 		currNode := gr.Nodes[k]
@@ -130,17 +184,15 @@ func forestDecompositionWorker(gr *g.Graph, startingInd int, endingInd int, main
 	}
 }
 
+// cvForestTo6 is the leader implementation of CV for a given Forest
 func cvForestTo6(f *Forest, c []chan myChannelData, mainChan chan myChannelData, debug int) {
 	op := 1
 
 	numChannels := len(c)
 
 	for i := 0; i < logStar(float64(len(f.Nodes)))+3; i++ {
-		//fmt.Printf("WE'RE DOING THIS FOR %d ITERATIONS.\n", logStar(float64(len(f.Nodes))))
 		numDone := 0
 		for k, ch := range c {
-			//startingInd := len(f.Nodes) / numChannels * i
-			//endingInd := len(f.Nodes) / numChannels * (i + 1)
 			startingInd := k
 			step := numChannels
 			ch <- myChannelData{
@@ -160,6 +212,7 @@ func cvForestTo6(f *Forest, c []chan myChannelData, mainChan chan myChannelData,
 	}
 }
 
+//cvForestTo6Worker is the worker implementation of Cole-Vishkin, setting the new color (either Color or TempColor) accordingly
 func cvForestTo6Worker(f *Forest, startingInd int, step int, mainChannel chan myChannelData) {
 	//change from previous iteration allows for more likelihood that each channel will have valid work to do
 	for k := startingInd; k <= numAllNodes; k += step {
@@ -169,42 +222,20 @@ func cvForestTo6Worker(f *Forest, startingInd int, step int, mainChannel chan my
 			if parent == nil {
 				if isTemp {
 					currNode.TempColor = calcColorRoot(currNode.Color)
-					if currNode.TempColor == 0 {
-						fmt.Printf("I JUST SET %s (temp) TO 0\n", currNode.Pointer.Name)
-					}
-					//currNode.TempColor = calcColor(currNode.Color, currNode.Neighbors[0].Color)
-					//currNode.TempColor = currNode.Color
 				} else {
 					currNode.Color = calcColorRoot(currNode.TempColor)
-					//currNode.Color = calcColor(currNode.TempColor, currNode.Neighbors[0].TempColor)
-					//currNode.Color = currNode.TempColor
-					if currNode.Color == 0 {
-						fmt.Printf("I JUST SET %s TO 0\n", currNode.Pointer.Name)
-					}
 				}
 			} else {
 				if isTemp {
-					//fmt.Println("isTemp!", currNode.Pointer.Name, currNode.Color, parent.Pointer.Name, parent.Color)
 					if currNode.Color == parent.Color {
 						log.Fatalf("me and parent is temp same! %d, %s, %s, %t\n%d, %d\n", currNode.Color, currNode.Pointer.Name, parent.Pointer.Name, parent.Parent == nil, currNode.TempColor, parent.TempColor)
 					}
 					currNode.TempColor = calcColor(currNode.Color, parent.Color)
-					if currNode.TempColor == 0 {
-						fmt.Printf("I JUST SET %s (temp) TO 0\n", currNode.Pointer.Name)
-					}
-					fmt.Printf("%d calculated from %d and %d for %s\n", currNode.TempColor, currNode.Color, parent.Color, currNode.Pointer.Name)
 				} else {
-					//fmt.Println("is not Temp!", currNode.Pointer.Name, currNode.Color, parent.Pointer.Name, parent.Color)
 					if currNode.TempColor == parent.TempColor {
-						printForest(f)
-						//TODO: FIX RIGHT HERE
 						log.Fatalf("me and parent is same! %d, %s, %s, %t\n", currNode.TempColor, currNode.Pointer.Name, parent.Pointer.Name, parent.Parent == nil)
 					}
 					currNode.Color = calcColor(currNode.TempColor, parent.TempColor)
-					if currNode.Color == 0 {
-						fmt.Printf("I JUST SET %s TO 0\n", currNode.Pointer.Name)
-					}
-					fmt.Printf("%d calculated from %d and %d for %s\n", currNode.Color, currNode.TempColor, parent.TempColor, currNode.Pointer.Name)
 				}
 			}
 		}
@@ -214,6 +245,7 @@ func cvForestTo6Worker(f *Forest, startingInd int, step int, mainChannel chan my
 	}
 }
 
+// shiftDown is the leader implementation of down shifting process to reduce 6-color Forests to 3-color Forests
 func shiftDown(f *Forest, c []chan myChannelData, mainChan chan myChannelData, debug int) {
 	op := 3
 
@@ -265,12 +297,12 @@ func shiftDown(f *Forest, c []chan myChannelData, mainChan chan myChannelData, d
 	}
 }
 
+// shiftDownWorker is the worker implementation of the first stage of the down shift algorithm
 func shiftDownWorker(f *Forest, startingInd int, step int, mainChannel chan myChannelData) {
 	//change from previous iteration allows for more likelihood that each channel will have valid work to do
 	for k := startingInd; k <= numAllNodes; k += step {
 		currNode, ok := f.Nodes[k]
 		if ok {
-			//fmt.Printf("Examining \t\t %s\n", currNode.Pointer.Name)
 			parent := currNode.Parent
 			if parent == nil {
 				if isTemp {
@@ -278,23 +310,19 @@ func shiftDownWorker(f *Forest, startingInd int, step int, mainChannel chan myCh
 					for newColor == currNode.Color {
 						newColor = rand.Intn(3)
 					}
-					//fmt.Printf("%s (root) shifted down from %d to %d\n", currNode.Pointer.Name, currNode.Color, newColor)
 					currNode.TempColor = newColor
 				} else {
 					newColor := currNode.TempColor
 					for newColor == currNode.TempColor {
 						newColor = rand.Intn(3)
 					}
-					//fmt.Printf("%s (root) shifted down from %d to %d\n", currNode.Pointer.Name, currNode.TempColor, newColor)
 					currNode.Color = newColor
 				}
 			} else {
 				if isTemp {
 					currNode.TempColor = parent.Color
-					//fmt.Printf("%s shifted down from %d to %d\n", currNode.Pointer.Name, currNode.Color, currNode.TempColor)
 				} else {
 					currNode.Color = parent.TempColor
-					//fmt.Printf("%s shifted down from %d to %d\n", currNode.Pointer.Name, currNode.TempColor, currNode.Color)
 				}
 			}
 		}
@@ -304,6 +332,7 @@ func shiftDownWorker(f *Forest, startingInd int, step int, mainChannel chan myCh
 	}
 }
 
+// shiftDownWorker is the worker implementation of the second stage of the down shift algorithm
 func shiftDownWorkerCleanup(f *Forest, startingInd int, step int, thresh int, mainChannel chan myChannelData) {
 	//change from previous iteration allows for more likelihood that each channel will have valid work to do
 	for k := startingInd; k <= numAllNodes; k += step {
@@ -323,6 +352,7 @@ func shiftDownWorkerCleanup(f *Forest, startingInd int, step int, thresh int, ma
 	}
 }
 
+// unifyForests is a deprecated first attempt at unifying separate Forests
 func unifyForests(forests []*Forest, gr *g.Graph) {
 	for _, k := range gr.Nodes {
 		fPtr, ok := forests[0].Nodes[k.Ind]
@@ -336,8 +366,7 @@ func unifyForests(forests []*Forest, gr *g.Graph) {
 		for _, k := range gr.Nodes {
 			fPtr, ok := forests[i].Nodes[k.Ind]
 			if ok && k.Color != -1 {
-				fmt.Printf("HERE, unifying %d and %d to %d\n", k.Color, fPtr.Color, k.Color&fPtr.Color)
-				//k.Color = calcColor(k.Color, fPtr.Color) //TODO: FIX IF NECESSARY
+				//k.Color = calcColor(k.Color, fPtr.Color)
 				k.Color = k.Color | fPtr.Color
 			} else if ok {
 				k.Color = fPtr.Color
@@ -350,10 +379,7 @@ func unifyForests(forests []*Forest, gr *g.Graph) {
 	}
 }
 
-//func unifyForests3(forests []*Forest, gr *g.Graph) {
-//
-//}
-
+// unifyForests2 is the leader implementation (less efficient) to unify Forests
 func unifyForests2(forests []*Forest, gr *g.Graph) {
 	for _, k := range gr.Nodes {
 		k.Color = -1
@@ -389,6 +415,7 @@ func unifyForests2(forests []*Forest, gr *g.Graph) {
 	}
 }
 
+// findIndexOf searches an array for the desired color, returning -1 if not found
 func findIndexOf(options []int, color int) int {
 	for ind, k := range options {
 		if k == color {
@@ -398,6 +425,7 @@ func findIndexOf(options []int, color int) int {
 	return -1
 }
 
+// workerWait is the overall manager for workers, governing the division into different subalgorithms
 func workerWait(gr *g.Graph, c chan myChannelData, mainChannel chan myChannelData) {
 	rec := <-c
 	if rec.Op == 0 {
@@ -420,45 +448,7 @@ func workerWait(gr *g.Graph, c chan myChannelData, mainChannel chan myChannelDat
 
 }
 
-func CVReduction(gr g.Graph, poolSize int, debug int) g.Graph {
-	if debug%2 == 1 {
-		fmt.Printf("Starting CV Reduction \n")
-	}
-	isTemp = true
-	numAllNodes = len(gr.Nodes)
-	mainChannel := make(chan myChannelData)
-	channels := buildWorkers(gr, poolSize, mainChannel, debug)
-
-	if debug%2 == 1 {
-		fmt.Printf("\tStarting Forest Decomposition \n")
-	}
-
-	forests := forestDecomposition(gr, channels, mainChannel, debug)
-	for _, f := range forests {
-		for _, node := range f.Nodes {
-			bfsForest(node)
-		}
-		// TODO: MAKE PARALLEL
-	}
-
-	if debug%2 == 1 {
-		fmt.Printf("\tStarting CV to 6 \n")
-	}
-
-	for _, f := range forests {
-		cvForestTo6(f, channels, mainChannel, debug)
-		shiftDown(f, channels, mainChannel, debug)
-		printForest(f)
-	}
-
-	if debug%2 == 1 {
-		fmt.Printf("\tStarting Forest Unification \n")
-	}
-
-	unifyForests2(forests, &gr)
-	return gr
-}
-
+// logStar is the logstar function defined in the CV paper https://www.cs.bgu.ac.il/~elkinm/book.pdf
 func logStar(n float64) int {
 	if n <= 2 {
 		return 0
@@ -467,8 +457,9 @@ func logStar(n float64) int {
 	}
 }
 
+// buildWorkers creates a desired number of workers based on input specifications or a default
 func buildWorkers(gr g.Graph, poolSize int, mainChannel chan myChannelData, debug int) []chan myChannelData {
-	defaultPool := math.Floor(math.Sqrt(float64(len(gr.Nodes)))) //TODO: DETERMINE DEFAULT
+	defaultPool := math.Floor(math.Sqrt(float64(len(gr.Nodes)))) //TODO: ADJUST DEFAULT AS NECESSARY
 	var numWorkers int
 	if poolSize <= 0 {
 		numWorkers = int(defaultPool)
@@ -489,11 +480,11 @@ func buildWorkers(gr g.Graph, poolSize int, mainChannel chan myChannelData, debu
 	return myChannels
 }
 
+// bfsForest runs a BFS on a given node, orienting the tree and setting parents. Cannot safely be run in parallel
 func bfsForest(f *ForestNode) {
 	if f != nil {
 		for _, k := range f.Neighbors {
 			if k.Parent == nil && f.Parent != k {
-				//fmt.Printf("\tAssigning %s as parent of %s\n.", f.Pointer.Name, k.Pointer.Name)
 				k.Parent = f
 				bfsForest(k)
 			}
@@ -501,7 +492,7 @@ func bfsForest(f *ForestNode) {
 	}
 }
 
-// implementation borrowed from https://github.com/BenWiederhake/cole-vishkin/blob/master/cv.cpp
+// calcColor is the crux of the CV algorithm
 // implementation borrowed from https://www.zhengqunkoo.com:8443/zhengqunkoo/site/src/commit/ebbab6e24911a02c97b380f2e39f06d9c3e83770/worker.js
 func calcColor(me int, parent int) int {
 	me1 := uint32(me)
@@ -509,47 +500,18 @@ func calcColor(me int, parent int) int {
 	if me == parent {
 		log.Fatal("me and parent is same! ", me, parent)
 	}
-	/*
-	//i := findIndexFromRight(me, parent)
-	//i2 := i
-	//if i2 == 0 {
-	//	i2 = 1
-	//}
-	//shamt := int(math.Ceil(math.Log2(float64(i2))))
-	//return (((me >> i) & 1) << shamt) + i
-
-	//i := minFromZero(uint(me) ^ uint(parent)) //one indexed?
-	//shamt := widthOfI(i)
-	//origBit := 1 & (uint(me) >> (i-1))
-	////return int(bits.Reverse(i | (orig_bit << shamt)))
-	//return int(i | (origBit << shamt))
-
-	//xored := me ^ parent
-	//num := trailingZeros(xored)
-	//orig_bit := 1 & (me >> num)
-	//return orig_bit | (num << 1)
-	*/
 
 	j := getDifferBitIndex(me1, parent1)
 	//midx := getBitLength(me1) - j - 1
 	midx := 32 - j - 1
-	fmt.Printf("calc color from %d and %d to %d\n", me, parent, int((j << 1) | (me1&(1<<midx))>>midx))
-	fmt.Printf("\tdiffers at index %d\n", j)
-	fmt.Printf("\tcalc color from %16b and %16b to %16b\n", me, parent, int((j << 1) | (me1&(1<<midx))>>midx))
 	return int((j << 1) | (me1&(1<<midx))>>midx)
 }
 
+// getDifferBitIndex returns the bit index from the left at which 2 uint32s vary (Big Endian)
 func getDifferBitIndex(x, y uint32) uint32 {
 	if x == y {
 		log.Fatal("No differing bit")
 	} else {
-		// Get the longest bit length of x and y
-		//bl := 0
-		//if x > y {
-		//	bl = getBitLength(x)
-		//} else {
-		//	bl = getBitLength(y)
-		//}
 		bl := uint32(32)
 		m := uint32(1) << (bl - 1)
 		var idx = 0
@@ -565,6 +527,7 @@ func getDifferBitIndex(x, y uint32) uint32 {
 	return 0
 }
 
+// getBitLength is a function that returns the bit length of a number. Deprecated in favor of uint32 standardization
 func getBitLength(x uint32) uint32 {
 	// Minimum bit length is 3
 	if x < 6 {
@@ -579,69 +542,16 @@ func getBitLength(x uint32) uint32 {
 	}
 }
 
-func minFromZero(u uint) uint {
-	if 1&u == 1 {
-		return 1
-	}
-	return 1 + minFromZero(u>>1)
-}
-
-func trailingZeros(me int) int {
-	if me == 0 {
-		return 0
-	} else if me%2 == 1 {
-		return 0
-	} else {
-		return trailingZeros(me>>1) + 1
-	}
-}
-
+// calcColorRoot is the same as calcColor but uses an arbitrary index of 30 (0-indexed)
 func calcColorRoot(me int) int {
-	/*
-	//i2 := me
-	//if i2 == 0 {
-	//	i2 = 1
-	//}
-	//shamt := int(math.Ceil(math.Log2(float64(i2))))
-	//i := shamt
-	//return (((me >> i) & 1) << shamt) + i
-
-	//xored := me ^ parent
-	//num := trailingZeros(xored)
-
-	//num := 1
-	//orig_bit := 1 & (me >> num)
-	//return orig_bit | (num << 1)
-
-		//i := minFromZero(uint(me) ^ uint(15)) //one indexed?
-		//shamt := widthOfI(i)
-		//origBit := 1 & (uint(me) >> (i-1))
-		//return int(i | (origBit << shamt))
-	*/
-	//j := getDifferBitIndex(me, parent)
-	//j := rand.Intn(getBitLength(me))  //TODO: FIX ROOT STUFF
-
 	me1 := uint32(me)
 	j := uint32(30)
 	//midx := getBitLength(me1) - j - 1
 	midx := 32 - j - 1
-	//fmt.Printf("calc color from %d (root) to %d\n", me, (j << 1) | (me&(1<<midx))>>midx)
-	//fmt.Printf("\tdiffers at index %d\n", j)
-	//fmt.Printf("\tcalc color from %16b (root) to %16b\n", me, (j << 1) | (me&(1<<midx))>>midx)
 	return int((j << 1) | (me1&(1<<midx))>>midx)
 }
 
-func findIndexFromRight(me int, parent int) int {
-	if me == parent {
-		log.Fatalf("Parent and Child same color: %d\n", me, parent)
-	}
-	if me%2 != parent%2 {
-		return 0
-	} else {
-		return 1 + findIndexFromRight(me>>1, parent>>1)
-	}
-}
-
+// calcSafeReduction is used to calculate a safe color to set during the down shifting process
 func calcSafeReduction(n *ForestNode, thresh int) int {
 	if isTemp {
 		if n.TempColor < thresh {
@@ -653,7 +563,7 @@ func calcSafeReduction(n *ForestNode, thresh int) int {
 			colorProposal = rand.Intn(3)
 			for i, _ := range n.Neighbors {
 				if n.Neighbors[i].TempColor == colorProposal {
-					i=0 //reset the progress
+					i = 0 //reset the progress
 					colorProposal = rand.Intn(3)
 				}
 			}
@@ -670,7 +580,7 @@ func calcSafeReduction(n *ForestNode, thresh int) int {
 			colorProposal = rand.Intn(3)
 			for i, _ := range n.Neighbors {
 				if n.Neighbors[i].Color == colorProposal {
-					i=0 //reset the progress
+					i = 0 //reset the progress
 					colorProposal = rand.Intn(3)
 				}
 			}

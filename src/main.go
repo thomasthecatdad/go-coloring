@@ -55,6 +55,7 @@ func runTestAndPrintResult(td t.TestDirective) {
 		//TODO: REFINE TEST OUTPUT, MAYBE EXPORT RESULTS TO FILE
 		fmt.Printf("Test Name: %s\n", k.Name)
 		g.PrintGraph(&k.Output)
+		fmt.Printf("IsSafe: %t\tNum Colors: %d\n", k.IsSafe, k.NumColors)
 	}
 	fmt.Printf("\n-------------------------\n")
 }
