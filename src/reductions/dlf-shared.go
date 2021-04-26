@@ -21,20 +21,11 @@ func dlfShared(gr g.Graph, poolSize int, debug int) g.Graph {
 	var wg sync.WaitGroup
 	wg.Add(len(gr.Nodes))
 
-	var checkpoint1 = make([]*sync.WaitGroup, len(gr.Nodes))
-	var checkpoint2 = make([]*sync.WaitGroup, len(gr.Nodes))
-	var checkpoint3 = make([]*sync.WaitGroup, len(gr.Nodes))
+	var checkpoint1 sync.WaitGroup
+	var checkpoint2 sync.WaitGroup
+	var checkpoint3 sync.WaitGroup
 
-	for i := 0; i < len(checkpoint1); i++ {
-		var newwg sync.WaitGroup
-		checkpoint1[i] = &newwg
-		var newwg2 sync.WaitGroup
-		checkpoint2[i] = &newwg2
-		var newwg3 sync.WaitGroup
-		checkpoint3[i] = &newwg3
-	}
-
-	checkpoint1[0].Add(len(gr.Nodes))
+	checkpoint1.Add(len(gr.Nodes))
 
 	var lock sync.Mutex
 
@@ -44,7 +35,7 @@ func dlfShared(gr g.Graph, poolSize int, debug int) g.Graph {
 		}
 		node := node
 		go func() {
-			vertexShared(node, gr.MaxDegree, checkpoint1, checkpoint2, checkpoint3, &lock, debug)
+			vertexShared(node, gr.MaxDegree, &checkpoint1, &checkpoint2, &checkpoint3, &lock, debug)
 			wg.Done()
 		}()
 	}
@@ -54,7 +45,7 @@ func dlfShared(gr g.Graph, poolSize int, debug int) g.Graph {
 	return gr
 }
 
-func vertexShared(n *g.Node, maxDegree int, checkpoint1 []*sync.WaitGroup, checkpoint2 []*sync.WaitGroup, checkpoint3 []*sync.WaitGroup, lock *sync.Mutex, debug int) {
+func vertexShared(n *g.Node, maxDegree int, checkpoint1 *sync.WaitGroup, checkpoint2 *sync.WaitGroup, checkpoint3 *sync.WaitGroup, lock *sync.Mutex, debug int) {
 	rand.Seed(time.Now().UnixNano())
 	degree := len(n.Neighbors)
 
@@ -81,13 +72,11 @@ func vertexShared(n *g.Node, maxDegree int, checkpoint1 []*sync.WaitGroup, check
 			fmt.Println(n.Name, "round:", iter)
 		}
 
+		temp := rand.Float32()
+
 		lock.Lock()
 		m = data[n.Name]
-		lock.Unlock()
-
-		m.rndval = rand.Float32()
-
-		lock.Lock()
+		m.rndval = temp
 		data[n.Name] = m
 		lock.Unlock()
 
@@ -97,9 +86,9 @@ func vertexShared(n *g.Node, maxDegree int, checkpoint1 []*sync.WaitGroup, check
 		deg := m.degree
 		rnd := m.rndval
 
-		checkpoint2[iter].Add(1)
-		checkpoint1[iter].Done()
-		checkpoint1[iter].Wait()
+		checkpoint2.Add(1)
+		checkpoint1.Done()
+		checkpoint1.Wait()
 
 		for _, neighbor := range n.Neighbors {
 			incmsg := data[neighbor.Name]
@@ -123,9 +112,9 @@ func vertexShared(n *g.Node, maxDegree int, checkpoint1 []*sync.WaitGroup, check
 			myColor = false
 		}
 
-		checkpoint3[iter].Add(1)
-		checkpoint2[iter].Done()
-		checkpoint2[iter].Wait()
+		checkpoint3.Add(1)
+		checkpoint2.Done()
+		checkpoint2.Wait()
 
 		if myColor {
 			n.Color = selectedColor
@@ -143,14 +132,14 @@ func vertexShared(n *g.Node, maxDegree int, checkpoint1 []*sync.WaitGroup, check
 			break
 		}
 
-		checkpoint1[iter+1].Add(1)
-		checkpoint3[iter].Done()
-		checkpoint3[iter].Wait()
+		checkpoint1.Add(1)
+		checkpoint3.Done()
+		checkpoint3.Wait()
 
 		iter++
 	}
 
-	checkpoint3[iter].Done()
+	checkpoint3.Done()
 
 	return
 
